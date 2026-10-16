@@ -1,19 +1,19 @@
 {
   "name": "@sreyasts/workflow-lens",
-  "version": "0.1.0",
-  "description": "Local visual review and CLI inspector for GitHub Actions permissions, dependencies, and review hotspots.",
+  "version": "0.1.1",
+  "description": "CLI for generating local GitHub Actions dependency maps and workflow review reports.",
   "type": "module",
   "license": "MIT",
   "bin": {
     "workflow-lens": "bin/workflow-lens.js"
   },
   "files": [
-    "dist",
+    "dist/cli/cli.js",
     "bin",
-    "src",
-    "action.yml",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md"
   ],
   "engines": {
     "node": ">=22.18.0"
@@ -29,11 +29,12 @@
   "keywords": [
     "github-actions",
     "workflow",
-    "security",
+    "permissions",
+    "pull-request",
+    "cli",
     "mermaid",
     "visualization",
-    "devops",
-    "static-analysis"
+    "devops"
   ],
   "publishConfig": {
     "access": "public"

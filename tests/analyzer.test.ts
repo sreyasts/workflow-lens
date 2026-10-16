@@ -37,6 +37,12 @@ test('full SHA is not flagged as mutable and local actions are not pinned', () =
   const r = analyze(workflow(`    steps:\n      - uses: actions/checkout@${'a'.repeat(40)}\n        with:\n          persist-credentials: false\n      - uses: ./.github/actions/test`));
   assert.ok(!r.findings.some(f => ['unpinned-action', 'persist-credentials'].includes(f.rule)));
 });
+test('GitHub self-repository actions and workflows are treated as commit-pinned', () => {
+  const action = analyze(workflow('    steps:\n      - uses: $/'));
+  const reusable = analyze('on: push\njobs:\n  call:\n    uses: $/.github/workflows/reusable.yml');
+  assert.ok(!action.findings.some(f => f.rule === 'unpinned-action'));
+  assert.ok(!reusable.findings.some(f => f.rule === 'unpinned-workflow'));
+});
 test('quoted false does not silently disable credential persistence', () => {
   const r = analyze(workflow('    steps:\n      - uses: actions/checkout@v4\n        with:\n          persist-credentials: "false"'));
   assert.ok(r.findings.some(f => f.rule === 'persist-credentials'));

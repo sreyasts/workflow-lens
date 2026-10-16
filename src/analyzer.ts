@@ -19,6 +19,8 @@ type Obj = Record<string, unknown>;
 const obj = (x: unknown): x is Obj => typeof x === 'object' && x !== null && !Array.isArray(x);
 const text = (x: unknown): string => typeof x === 'string' ? x : '';
 const own = (x: Obj, key: string): boolean => Object.hasOwn(x, key);
+// GitHub's `$/` self-repository form resolves to the running commit.
+const selfRepositoryRef = (value: string): boolean => value.startsWith('$/');
 const docs = 'https://docs.github.com/en/actions/reference/security/secure-use';
 const list = (x: unknown): string[] => typeof x === 'string' ? [x] : Array.isArray(x) ? x.filter((v): v is string => typeof v === 'string') : [];
 function permissions(value: unknown): Record<string, string> {
@@ -101,14 +103,14 @@ export function analyze(source: string): Analysis {
       }
       if (reusable) {
         result.warnings.push(`Called workflow ${raw.uses} is not fetched or expanded.`);
-        if (!text(raw.uses).startsWith('./') && !/@[a-f\d]{40}$/i.test(text(raw.uses))) add('unpinned-workflow', 'medium', 'Reusable workflow uses a mutable reference', text(raw.uses), 'Use a reviewed full commit SHA or an appropriate verified dependency lockfile.', [...path, 'uses'], id);
+        if (!text(raw.uses).startsWith('./') && !selfRepositoryRef(text(raw.uses)) && !/@[a-f\d]{40}$/i.test(text(raw.uses))) add('unpinned-workflow', 'medium', 'Reusable workflow uses a mutable reference', text(raw.uses), 'Use a reviewed full commit SHA or an appropriate verified dependency lockfile.', [...path, 'uses'], id);
       }
       if (Object.entries(perms).some(([k, v]) => v === 'write' && k !== 'id-token') && steps.length) add('write-token', 'info', 'Job requests a write-capable token', 'All steps in this job share the requested token scope. Event restrictions may reduce effective access.', 'Keep write access isolated to the job that needs it; review each action in that job.', own(raw, 'permissions') ? [...path, 'permissions'] : ['permissions'], id);
       steps.forEach((step, index) => {
         if (!obj(step)) { result.errors.push(`Step ${index + 1} in ${id} must be a mapping.`); return; }
         const stepPath = [...path, 'steps', index];
         const uses = text(step.uses); const run = text(step.run); const withObj = obj(step.with) ? step.with : {};
-        if (uses && !uses.startsWith('./') && !uses.startsWith('docker://') && !/@[a-f\d]{40}$/i.test(uses)) add('unpinned-action', 'info', 'Action uses a mutable reference', uses, 'Review the action and pin a full commit SHA, or use an appropriate verified dependency lockfile.', [...stepPath, 'uses'], id, index);
+        if (uses && !uses.startsWith('./') && !selfRepositoryRef(uses) && !uses.startsWith('docker://') && !/@[a-f\d]{40}$/i.test(uses)) add('unpinned-action', 'info', 'Action uses a mutable reference', uses, 'Review the action and pin a full commit SHA, or use an appropriate verified dependency lockfile.', [...stepPath, 'uses'], id, index);
         if (uses.startsWith('docker://') && !/@sha256:[a-f\d]{64}$/i.test(uses)) add('unpinned-container', 'info', 'Container reference is mutable', uses, 'Use a reviewed image digest.', [...stepPath, 'uses'], id, index);
         const untrustedContext = /\$\{\{[\s\S]*?(?:github\.(?:event\.(?:pull_request\.(?:title|body|head\.(?:ref|label))|workflow_run\.(?:head_branch|display_title|head_commit\.message)|issue\.(?:title|body)|(?:review_)?comment\.body|discussion\.(?:title|body)|review\.body|head_commit\.(?:message|author\.(?:name|email)))|head_ref|ref_name|ref)|(?:github\.event\.)?inputs(?:\.[\w.-]+|\[\s*['"][^'"]+['"]\s*\]))[\s\S]*?\}\}/.test(run);
         if (untrustedContext) add('script-injection', 'high', 'Untrusted context is interpolated into a script', 'PR, issue, branch, or comment text is inserted into the generated shell script. This is a review heuristic; expression parsing is not complete.', 'Pass the value through an environment variable and quote it using your shell conventions. Avoid eval.', [...stepPath, 'run'], id, index);

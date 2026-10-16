@@ -1,7 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 — 2026-10-16
 
+- Correct npm package README, metadata, and support policy; ship only the CLI bundle and required docs.
+- Treat GitHub self-repository action and workflow references as commit-pinned; show the moving `v0` channel in the app header.
+- Add actionlint and zizmor to CI; add seven-day Dependabot cooldowns and disable release caches.
+- Isolate npm OIDC publishing from the GitHub release job.
 - Align the declared Node.js minimum with the TypeScript stripping support required by the CLI.
 - Bound CLI reads before loading large files, and confine composite-action input paths to the checked-out workspace.
 - Harden the release workflow to validate version tags, avoid shell interpolation, use pinned actions, and take notes from the matching changelog entry.
@@ -22,4 +26,4 @@
 - Restore normal Tab/Shift+Tab navigation out of the source editor.
 - Test the CLI and composite action in GitHub Actions on Node.js 22 and 24.
 
-The `0.1.0` package was published on 2026-10-16. Its immutable npm README still needs correction in a later version. The existing GitHub release descriptions were corrected on 2026-10-16.
+The `0.1.0` package was published on 2026-10-16 with an inaccurate README; npm versions cannot be replaced. Version `0.1.1` is prepared as a release candidate and has not been published. The existing GitHub release descriptions were corrected on 2026-10-16.

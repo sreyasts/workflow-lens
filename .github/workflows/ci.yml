@@ -3,7 +3,32 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  workflow-security:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Run actionlint 1.7.12
+        shell: bash
+        run: |
+          curl --fail --silent --show-error --location \
+            https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz \
+            --output "$RUNNER_TEMP/actionlint.tar.gz"
+          echo '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  '"$RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+          # actionlint 1.7.12 predates GitHub's self-repository syntax; zizmor checks that syntax.
+          "$RUNNER_TEMP/actionlint" -ignore 'specifying action "\$/" in invalid format because ref is missing' -color
+      - name: Run zizmor 1.31.1
+        uses: zizmorcore/zizmor-action@85b2b9fb8e3325e7a23d7d0a9d7ba5ae0f999e3e # v0.7.1
+        with:
+          version: 1.31.1
+          advanced-security: false
+          annotations: true
   check:
+    needs: workflow-security
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -21,8 +46,26 @@ jobs:
       - run: npm run build
       - name: Dogfood Workflow Lens CLI
         run: npm run inspect -- .github/workflows/ci.yml --fail-on-high
+      - name: Verify npm package contents
+        shell: bash
+        run: |
+          npm pack --dry-run --json > "$RUNNER_TEMP/npm-pack.json"
+          node --input-type=module - "$RUNNER_TEMP/npm-pack.json" <<'NODE'
+          import { readFileSync } from 'node:fs';
+          const manifest = JSON.parse(readFileSync(process.argv[2], 'utf8'))[0];
+          const files = new Set(manifest.files.map(file => file.path));
+          const required = ['bin/workflow-lens.js', 'dist/cli/cli.js', 'LICENSE', 'README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'package.json'];
+          const allowed = new Set(required);
+          const unexpected = [...files].filter(path => !allowed.has(path));
+          const missing = required.filter(path => !files.has(path));
+          if (missing.length || unexpected.length) {
+            console.error({ missing, unexpected });
+            process.exit(1);
+          }
+          console.log(`Verified ${manifest.entryCount} npm package files.`);
+          NODE
       - name: Verify GitHub Action entrypoint
-        uses: ./
+        uses: $/
         with:
           workflow: .github/workflows/ci.yml
           fail-on-high: true

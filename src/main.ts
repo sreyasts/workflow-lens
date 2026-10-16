@@ -48,10 +48,10 @@ root.innerHTML = `
       <a class="brand" href="./" aria-label="Workflow Lens home">
         <span class="logo">${ICON_LOGO}</span>
         <span class="brand-text">Workflow<span class="brand-accent">Lens</span></span>
-        <span class="version">v0.1.0</span>
+        <span class="version" title="Moving latest-release alias for the GitHub Action">v0</span>
       </a>
       <span class="brand-divider">/</span>
-      <span class="brand-tagline">GitHub Actions Inspector</span>
+      <span class="brand-tagline">Visual workflow map &amp; PR report</span>
     </div>
     <nav aria-label="Main navigation">
       <span class="local" title="Workflow parsing runs in your browser. Workflow contents are not uploaded by this app.">
@@ -67,7 +67,7 @@ root.innerHTML = `
       <div class="intro-main">
         <div class="intro-badge">
           <span class="intro-badge-dot"></span>
-          <span>STATIC PIPELINE REVIEWER</span>
+          <span>VISUAL WORKFLOW EXPLAINER</span>
         </div>
         <h1>Review GitHub Actions Before Merging</h1>
         <p class="subtitle">See requested permissions, secret references, and job dependencies; review static hints locally in your browser.</p>
