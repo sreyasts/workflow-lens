@@ -6,33 +6,14 @@ These are unsent drafts and an experiment plan, not proof of usage. Repo stars, 
 
 ---
 
-## 1. Hacker News — Show HN Launch Post
+## 1. Curated Directory Submission — `awesome-actions`
 
-**Title:**
-> Show HN: Workflow Lens – Visual GitHub Actions dependency & permission reviewer
+Submit a pull request to [sdras/awesome-actions](https://github.com/sdras/awesome-actions) (25k+ stars), the primary curated index for GitHub Actions:
 
-**Body:**
-```text
-Hey HN,
-
-I built Workflow Lens (https://sreyasts.github.io/workflow-lens/), a client-side visual tool to inspect GitHub Actions workflows before merging them.
-
-Whenever I review pull requests that modify CI/CD workflows, it's hard to spot risky privilege escalations, dynamic secret references, or unpinned dependencies just by reading lines of YAML diffs.
-
-The browser app processes the workflow locally; it has no app backend, workflow uploads, analytics, or AI API calls:
-1. Renders a live Mermaid dependency graph of your jobs (based on `needs`).
-2. Shows requested token scopes and secret references.
-3. Shows bounded review hints, including selected untrusted expressions interpolated into scripts. It is not a security audit.
-4. Generates a copy-paste PR Markdown review report with the embedded Mermaid diagram for your team.
-
-The npm package is not published. From a source checkout, build and run the CLI with `npm ci`, `npm run build`, then `npm run inspect -- .github/workflows/ci.yml`.
-
-The composite GitHub Action has a versioned release. Pin a verified full commit SHA in production workflows; `v0` and `v0.1.0` are movable tags.
-
-Live web app: https://sreyasts.github.io/workflow-lens/
-Source code: https://github.com/sreyasts/workflow-lens
-
-I would love feedback from maintainers and DevOps folks: does this make your workflow review faster? What edge cases or heuristics would you like to see?
+- **Section**: Utility Actions / Testing & Linting
+- **Suggested Entry**:
+```markdown
+* [Workflow Lens](https://github.com/sreyasts/workflow-lens) - Client-side inspector and Action to review job dependencies, requested permissions, secret references, and review hotspots.
 ```
 
 ---
@@ -57,7 +38,7 @@ Key points:
 - **Visual Map**: Automatically calculates and draws job dependencies (`needs`).
 - **Access Overview**: Aggregates job permission overrides, workflow defaults, and named secret references.
 - **One-Click PR Report**: Exports a ready-to-paste GitHub PR Markdown comment with a rendered Mermaid diagram.
-- **CLI & GitHub Action**: The CLI runs from a source checkout; the composite action can be pinned to a verified commit SHA. The npm package is not published.
+- **CLI & GitHub Action**: The published CLI requires Node.js 22.18.0 or later; pin the composite action to a verified full commit SHA.
 
 Repo: https://github.com/sreyasts/workflow-lens
 Web app: https://sreyasts.github.io/workflow-lens/
