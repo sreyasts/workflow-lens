@@ -160,5 +160,6 @@ export function markdown(result: Analysis): string {
     ...(!result.errors.length ? ['## Job dependencies', '', '```mermaid', mermaid(result).trimEnd(), '```', '', 'Arrows show needs dependencies. Conditions are not evaluated.', ''] : []),
     ...result.jobs.flatMap(j => [`## Job: ${reportText(j.id)}`, `Runner: ${reportText(j.runner)}`, `Needs: ${reportText(j.needs.join(', ') || 'none')}`, `Requested permissions: ${reportText(JSON.stringify(j.permissions))}`, `Secret references: ${reportText(j.secrets.join(', ') || 'none detected')}`, '']),
     ...result.findings.flatMap(f => [`## ${f.severity.toUpperCase()}: ${reportText(f.title)}`, `Rule: ${f.rule} | Line: ${f.line}${f.job ? ` | Job: ${reportText(f.job)}` : ''}`, reportText(f.detail), `Review: ${reportText(f.advice)}`, `Reference: ${f.source}`, '']),
-    '## Limits', ...result.warnings.map(reportText), ''].join('\n');
+    '## Limits', ...result.warnings.map(reportText), '',
+    'Generated locally with [Workflow Lens](https://sreyasts.github.io/workflow-lens/).', ''].join('\n');
 }

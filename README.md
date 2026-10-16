@@ -12,6 +12,8 @@
 
 Paste or open a workflow to see its job dependencies, requested token permissions, secret references, and review hints. Processing happens on your device. No sign-in, uploads, external fonts, analytics, or AI API calls.
 
+![Workflow Lens showing a local workflow and its dependency map](https://raw.githubusercontent.com/sreyasts/workflow-lens/main/docs/screenshot.jpg)
+
 ## What it does
 
 - Draws the dependency map for a single YAML workflow; select a job for access details.
@@ -27,6 +29,18 @@ Paste or open a workflow to see its job dependencies, requested token permission
 3. Open your own `.yml` file, then choose **Copy PR report**. Review the metadata before pasting into a GitHub PR or issue; GitHub renders the embedded Mermaid diagram.
 
 Use **Mermaid diagram** for a standalone map, or **Export report** if clipboard access is unavailable. Exports always include the whole workflow, regardless of view filters.
+
+**Help test this on real reviews:** we are seeking five maintainers who review GitHub Actions changes. [Join the pilot](https://github.com/sreyasts/workflow-lens/discussions/5), or [share a completed review experience](https://github.com/sreyasts/workflow-lens/issues/new?template=review-experience.md). Tell us what helped or confused you; no star or endorsement is requested.
+
+## Choose the right tool
+
+| Need | Tool |
+| --- | --- |
+| Explain job dependencies and requested access visually; share a PR report | Workflow Lens |
+| Validate workflow syntax and expressions | [actionlint](https://github.com/rhysd/actionlint) |
+| Run deeper GitHub Actions security analysis | [zizmor](https://docs.zizmor.sh/) |
+
+Workflow Lens complements these tools. No matching hints does not establish safety.
 
 ## Quick CLI Inspection (npx)
 

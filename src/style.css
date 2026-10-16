@@ -2,43 +2,110 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* GitHub Dark & Slate System Tokens */
+  /* Warm white and sage theme; the source editor keeps its dark surface. */
+  color-scheme: light;
+  --bg-canvas: #f6f7f2;
+  --bg-subtle: #fcfdf9;
+  --bg-hover: #edf2e6;
+  --bg-active: #e5eddd;
+  --bg-inset: #f6f7f2;
+
+  --border-subtle: #e7ecdf;
+  --border-default: #d9e0d5;
+  --border-muted: #a6b3ab;
+  --border-focus: #527448;
+
+  --fg-default: #24372f;
+  --fg-muted: #617165;
+  --fg-subtle: #65775d;
+  --fg-on-emphasis: #ffffff;
+
+  --accent-fg: #527448;
+  --accent-emphasis: #416637;
+  --accent-subtle: rgba(101, 148, 82, 0.12);
+
+  --success-fg: #4d763e;
+  --success-emphasis: #355c3e;
+  --success-hover: #294c32;
+  --success-subtle: rgba(46, 160, 67, 0.12);
+
+  --warning-fg: #876622;
+  --warning-emphasis: #876622;
+  --warning-subtle: rgba(210, 153, 34, 0.12);
+
+  --danger-fg: #a74631;
+  --danger-emphasis: #a74631;
+  --danger-subtle: rgba(248, 81, 73, 0.12);
+
+  --shadow-sm: 0 1px 2px rgba(37, 60, 42, 0.05);
+  --shadow-md: 0 4px 12px rgba(37, 60, 42, 0.08);
+  --shadow-lg: 0 8px 24px rgba(37, 60, 42, 0.08);
+  --bg-panel: #ffffff;
+  --graph-grid: rgba(101, 124, 93, 0.08);
+  --edge-color: #8b9e82;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
   --bg-canvas: #0d1117;
+  --bg-panel: #0d1117;
   --bg-subtle: #161b22;
   --bg-hover: #1f242c;
   --bg-active: #262c36;
   --bg-inset: #090d13;
-
   --border-subtle: #21262d;
   --border-default: #30363d;
   --border-muted: #3d444d;
   --border-focus: #58a6ff;
-
   --fg-default: #e6edf3;
-  --fg-muted: #848d97;
+  --fg-muted: #a0aab5;
   --fg-subtle: #929ba5;
-  --fg-on-emphasis: #ffffff;
-
   --accent-fg: #58a6ff;
   --accent-emphasis: #1f6feb;
   --accent-subtle: rgba(56, 139, 253, 0.12);
-
   --success-fg: #3fb950;
   --success-emphasis: #238636;
   --success-hover: #2ea043;
-  --success-subtle: rgba(46, 160, 67, 0.12);
-
-  --warning-fg: #d29922;
+  --warning-fg: #e3b341;
   --warning-emphasis: #9e6a03;
-  --warning-subtle: rgba(210, 153, 34, 0.12);
-
-  --danger-fg: #f85149;
+  --danger-fg: #ff7b72;
   --danger-emphasis: #da3633;
-  --danger-subtle: rgba(248, 81, 73, 0.12);
-
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(1, 4, 9, 0.6);
+  --graph-grid: rgba(255, 255, 255, 0.03);
+  --edge-color: #388bfd;
+}
+
+.settings {
+  position: relative;
+}
+.settings > summary {
+  cursor: pointer;
+  padding: 6px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  color: var(--fg-default);
+}
+.settings-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 10;
+  width: 210px;
+  padding: 16px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+.settings-panel label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fg-default);
+}
+.settings-panel select {
+  width: 100%;
 }
 
 * {
@@ -209,7 +276,7 @@ select:hover {
   letter-spacing: -0.3px;
 }
 .logo {
-  background: linear-gradient(135deg, #1f6feb 0%, #238636 100%);
+  background: linear-gradient(135deg, #416637 0%, #355c3e 100%);
   color: #fff;
   width: 28px;
   height: 28px;
@@ -307,8 +374,8 @@ main {
   gap: 6px;
   padding: 2px 8px;
   border-radius: 12px;
-  background: rgba(56, 139, 253, 0.1);
-  border: 1px solid rgba(56, 139, 253, 0.25);
+  background: rgba(101, 148, 82, 0.1);
+  border: 1px solid rgba(101, 148, 82, 0.25);
   font-size: 10px;
   font-weight: 600;
   color: var(--accent-fg);
@@ -373,7 +440,7 @@ h1 {
 .workspace.dragging {
   outline: 2px dashed var(--accent-fg);
   outline-offset: -2px;
-  background: rgba(56, 139, 253, 0.05);
+  background: rgba(101, 148, 82, 0.05);
 }
 .workspace-toolbar {
   height: 48px;
@@ -381,7 +448,7 @@ h1 {
   justify-content: space-between;
   align-items: center;
   padding: 0 16px;
-  background: #161b22;
+  background: var(--bg-subtle);
   border-bottom: 1px solid var(--border-default);
 }
 .workspace-label {
@@ -426,14 +493,24 @@ h1 {
   gap: 1px;
 }
 .editor-panel {
-  background: #0d1117;
-  color: #e6edf3;
+  color-scheme: dark;
+  --fg-default: #d6e0d6;
+  --fg-muted: #a8bba9;
+  --fg-subtle: #9ab29d;
+  --bg-subtle: #20352e;
+  --border-subtle: #34443b;
+  --border-default: #34443b;
+  --accent-fg: #a6c98e;
+  --success-fg: #b4d49b;
+  --danger-fg: #ffac96;
+  background: #172724;
+  color: #d6e0d6;
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
 .output-panel {
-  background: #0d1117;
+  background: var(--bg-panel);
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -444,7 +521,7 @@ h1 {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background: #161b22;
+  background: var(--bg-subtle);
   border-bottom: 1px solid var(--border-default);
 }
 .panel-heading h2 {
@@ -468,12 +545,44 @@ h1 {
   border-radius: 10px;
 }
 
+.editor-panel .panel-heading,
+.editor-panel .editor-footer,
+.editor-panel .editor-wrap,
+.editor-panel #line-numbers {
+  background: #172724;
+}
+.editor-panel textarea {
+  color: #d4e1cc;
+}
+:root[data-theme="dark"] .editor-panel {
+  --fg-default: #e6edf3;
+  --fg-muted: #a0aab5;
+  --fg-subtle: #929ba5;
+  --bg-subtle: #161b22;
+  --border-subtle: #21262d;
+  --border-default: #30363d;
+  --accent-fg: #58a6ff;
+  --success-fg: #3fb950;
+  --danger-fg: #ff7b72;
+  background: #0d1117;
+  color: #e6edf3;
+}
+:root[data-theme="dark"] .editor-panel :is(.panel-heading, .editor-footer) {
+  background: #161b22;
+}
+:root[data-theme="dark"] .editor-panel :is(.editor-wrap, #line-numbers) {
+  background: #0d1117;
+}
+:root[data-theme="dark"] .editor-panel textarea {
+  color: #e6edf3;
+}
+
 /* Code Editor */
 .editor-wrap {
   display: flex;
   height: 650px;
   min-height: 460px;
-  background: #0d1117;
+  background: var(--bg-panel);
   position: relative;
   overflow: hidden;
 }
@@ -490,7 +599,7 @@ h1 {
   overflow: hidden;
   color: var(--fg-subtle);
   user-select: none;
-  background: #090d13;
+  background: var(--bg-inset);
   border-right: 1px solid var(--border-subtle);
 }
 textarea {
@@ -500,7 +609,7 @@ textarea {
   border: 0;
   outline: 0;
   background: transparent;
-  color: #e6edf3;
+  color: #24372f;
   white-space: pre;
   overflow: auto;
   font: 12px/22px var(--font-mono);
@@ -509,14 +618,14 @@ textarea {
   caret-color: var(--accent-fg);
 }
 textarea::selection {
-  background: rgba(56, 139, 253, 0.35);
+  background: rgba(101, 148, 82, 0.35);
 }
 .editor-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-top: 1px solid var(--border-subtle);
-  background: #161b22;
+  background: var(--bg-subtle);
   font-size: 11px;
   color: var(--fg-muted);
   padding: 8px 16px;
@@ -547,7 +656,7 @@ textarea::selection {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: #121820;
+  background: var(--bg-subtle);
   border-bottom: 1px solid var(--border-default);
 }
 .export-tools > span {
@@ -562,7 +671,7 @@ textarea::selection {
   min-height: 560px;
   max-height: 650px;
   overflow-y: auto;
-  background: #0d1117;
+  background: var(--bg-panel);
 }
 
 /* Demo Notice Banner */
@@ -571,7 +680,7 @@ textarea::selection {
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #e3b341;
+  color: var(--warning-fg);
   background: rgba(210, 153, 34, 0.1);
   border: 1px solid rgba(210, 153, 34, 0.3);
   padding: 8px 12px;
@@ -699,22 +808,22 @@ textarea::selection {
 }
 .info-dot {
   background: var(--accent-fg);
-  box-shadow: 0 0 6px rgba(88, 166, 255, 0.4);
+  box-shadow: 0 0 6px rgba(101, 148, 82, 0.4);
 }
 .stat-high.active {
   border-color: var(--danger-fg);
   background: var(--danger-subtle);
-  color: #ff7b72;
+  color: var(--danger-fg);
 }
 .stat-medium.active {
   border-color: var(--warning-fg);
   background: var(--warning-subtle);
-  color: #e3b341;
+  color: var(--warning-fg);
 }
 .stat-info.active {
   border-color: var(--accent-fg);
   background: var(--accent-subtle);
-  color: #79c0ff;
+  color: var(--accent-fg);
 }
 
 /* Tabs */
@@ -798,10 +907,10 @@ textarea::selection {
 }
 .graph-scroll {
   overflow-x: auto;
-  background-color: #090d13;
+  background-color: var(--bg-inset);
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, var(--graph-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--graph-grid) 1px, transparent 1px);
   background-size: 24px 24px;
   border: 1px solid var(--border-default);
   border-radius: 8px;
@@ -835,7 +944,7 @@ textarea::selection {
   padding: 12px;
   text-align: left;
   border: 1px solid var(--border-default);
-  background: #161b22;
+  background: var(--bg-subtle);
   border-radius: 8px;
   box-shadow: var(--shadow-sm);
   display: flex;
@@ -845,15 +954,15 @@ textarea::selection {
   color: var(--fg-default);
 }
 .job-card:hover {
-  background: #1c2128;
+  background: var(--bg-hover);
   border-color: var(--border-focus);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
 .job-card.selected {
   border-color: var(--accent-fg);
-  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.4);
-  background: #1c2128;
+  box-shadow: 0 0 0 2px rgba(101, 148, 82, 0.4);
+  background: var(--bg-hover);
 }
 .job-card-top {
   display: flex;
@@ -864,7 +973,7 @@ textarea::selection {
 .job-icon {
   display: grid;
   place-items: center;
-  background: rgba(56, 139, 253, 0.12);
+  background: rgba(101, 148, 82, 0.12);
   width: 24px;
   height: 24px;
   border-radius: 5px;
@@ -874,7 +983,7 @@ textarea::selection {
   font-size: 10px;
   font-weight: 600;
   font-family: var(--font-mono);
-  color: #ff7b72;
+  color: var(--danger-fg);
   background: rgba(248, 81, 73, 0.15);
   border: 1px solid rgba(248, 81, 73, 0.3);
   padding: 2px 6px;
@@ -928,7 +1037,7 @@ textarea::selection {
   gap: 4px;
 }
 .access-write {
-  color: #e3b341;
+  color: var(--warning-fg);
   font-weight: 600;
 }
 .access-unknown {
@@ -950,7 +1059,7 @@ textarea::selection {
 /* Findings Cards */
 .finding {
   border: 1px solid var(--border-default);
-  background: #161b22;
+  background: var(--bg-subtle);
   border-radius: 8px;
   padding: 14px 16px;
   margin: 10px 0;
@@ -983,19 +1092,19 @@ textarea::selection {
   border-radius: 4px;
 }
 .severity.high {
-  color: #ff7b72;
+  color: var(--danger-fg);
   background: rgba(248, 81, 73, 0.15);
   border: 1px solid rgba(248, 81, 73, 0.3);
 }
 .severity.medium {
-  color: #e3b341;
+  color: var(--warning-fg);
   background: rgba(210, 153, 34, 0.15);
   border: 1px solid rgba(210, 153, 34, 0.3);
 }
 .severity.info {
-  color: #79c0ff;
-  background: rgba(56, 139, 253, 0.15);
-  border: 1px solid rgba(56, 139, 253, 0.3);
+  color: var(--accent-fg);
+  background: rgba(101, 148, 82, 0.15);
+  border: 1px solid rgba(101, 148, 82, 0.3);
 }
 .finding h3 {
   font-size: 13px;
@@ -1071,7 +1180,7 @@ textarea::selection {
 .rule-tag {
   font-size: 10px;
   font-family: var(--font-mono);
-  background: #161b22;
+  background: var(--bg-subtle);
   border: 1px solid var(--border-default);
   padding: 1px 6px;
   border-radius: 4px;
@@ -1083,7 +1192,7 @@ textarea::selection {
   border: 1px solid var(--border-default);
   border-radius: 8px;
   padding: 14px 16px;
-  background: #161b22;
+  background: var(--bg-subtle);
   margin: 16px 0;
 }
 .detail-heading {
@@ -1118,7 +1227,7 @@ textarea::selection {
 .code-val {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: #79c0ff;
+  color: var(--accent-fg);
 }
 .badge-subtle {
   font-size: 10px;
@@ -1278,8 +1387,8 @@ footer a:hover {
   font: 11px/1.6 var(--font-mono);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  color: #ff7b72;
-  background: rgba(0, 0, 0, 0.25);
+  color: var(--danger-fg);
+  background: rgba(167, 70, 49, 0.04);
   padding: 8px 10px;
   border-radius: 4px;
   margin: 6px 0;
