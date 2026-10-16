@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { analyze, markdown, mermaid } from '../src/analyzer.ts';
 import { examples } from '../src/examples.ts';
 
@@ -148,6 +150,13 @@ test('CLI diagram output and format conflicts have predictable exit codes', () =
   assert.equal(run(['--mermaid', '--fail-on-high'], examples.risky).status, 1);
 });
 
+test('CLI caps stdin before allocating an oversized workflow', () => {
+  const result = spawnSync(process.execPath, ['src/cli.ts', '-'], { input: 'x'.repeat(256_001), encoding: 'utf8' });
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /256 KB input limit/);
+});
+
 test('job-level container triggers unpinned hint unless digest-pinned', () => {
   const mutable = analyze(workflow('    container: node:latest\n    steps: []'));
   assert.ok(mutable.findings.some(f => f.rule === 'unpinned-container' && f.job === 'test'));
@@ -155,12 +164,28 @@ test('job-level container triggers unpinned hint unless digest-pinned', () => {
   assert.ok(!pinned.findings.some(f => f.rule === 'unpinned-container'));
 });
 
-test('expanded untrusted contexts detect script injection', () => {
+test('all supported untrusted event contexts detect script injection', () => {
   const expressions = [
+    'github.event.pull_request.title',
+    'github.event.pull_request.body',
+    'github.event.pull_request.head.ref',
+    'github.event.pull_request.head.label',
+    'github.event.issue.title',
+    'github.event.issue.body',
+    'github.event.comment.body',
     'github.event.review_comment.body',
+    'github.event.review.body',
+    'github.event.discussion.title',
+    'github.event.discussion.body',
+    'github.event.head_commit.author.name',
+    'github.event.head_commit.author.email',
     'github.event.head_commit.message',
     'github.event.workflow_run.head_branch',
     'github.event.workflow_run.display_title',
+    'github.event.workflow_run.head_commit.message',
+    'github.head_ref',
+    'github.ref_name',
+    'github.ref',
     'github.event.inputs.command',
     'inputs.command',
     "inputs['command']",
@@ -170,6 +195,10 @@ test('expanded untrusted contexts detect script injection', () => {
     const result = analyze(workflow(`    steps:\n      - run: echo "${'${{'} ${expression} }}"`));
     assert.ok(result.findings.some(f => f.rule === 'script-injection'), `${expression} should be flagged`);
   }
+  const trusted = analyze(workflow('    steps:\n      - run: echo "${{ github.sha }} ${{ github.event.pull_request.number }}"'));
+  assert.ok(!trusted.findings.some(f => f.rule === 'script-injection'));
+  const invalidDiscussionCommentPath = analyze(workflow('    steps:\n      - run: echo "${{ github.event.discussion_comment.body }}"'));
+  assert.ok(!invalidDiscussionCommentPath.findings.some(f => f.rule === 'script-injection'));
 });
 
 test('composite action passes workflow-controlled inputs through environment variables', () => {
@@ -178,7 +207,32 @@ test('composite action passes workflow-controlled inputs through environment var
   assert.ok(runBlock, 'action should define its run script');
   assert.doesNotMatch(runBlock, /\$\{\{/);
   assert.match(action, /WORKFLOW_LENS_WORKFLOW: \$\{\{ inputs\.workflow \}\}/);
-  assert.match(action, /args=\("\$WORKFLOW_LENS_WORKFLOW"\)/);
+  assert.match(action, /args=\("\$workflow_path"\)/);
+  assert.match(action, /fromWorkspace\.startsWith\(`\.\.\$\{sep\}`\)/);
+});
+
+test('composite action rejects workflow paths that escape the checked-out workspace', () => {
+  const action = readFileSync(new URL('../action.yml', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+  const runBlock = action.split('      run: |\n')[1];
+  const script = runBlock?.match(/workflow_path="\$\(\s*node -e '([\s\S]*?)'\s*\)"/)?.[1];
+  assert.ok(script, 'action should validate its workflow path before installing dependencies');
+
+  const parent = mkdtempSync(join(tmpdir(), 'workflow-lens-action-'));
+  const workspace = join(parent, 'workspace');
+  mkdirSync(workspace);
+  writeFileSync(join(workspace, 'workflow.yml'), 'on: push\njobs: {}\n');
+  writeFileSync(join(parent, 'outside.yml'), 'outside: true\n');
+  try {
+    const env = { ...process.env, GITHUB_WORKSPACE: workspace, WORKFLOW_LENS_WORKFLOW: 'workflow.yml' };
+    const inside = spawnSync(process.execPath, ['-e', script], { encoding: 'utf8', env });
+    assert.equal(inside.status, 0);
+    assert.equal(inside.stdout, join(workspace, 'workflow.yml'));
+
+    const outside = spawnSync(process.execPath, ['-e', script], { encoding: 'utf8', env: { ...env, WORKFLOW_LENS_WORKFLOW: '../outside.yml' } });
+    assert.equal(outside.status, 2);
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
+  }
 });
 
 test('remote script execution detects sudo flags and python piping', () => {

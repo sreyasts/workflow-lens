@@ -68,4 +68,10 @@ jobs:
             echo "NPM_TOKEN is unset; skipping npm publication."
             exit 0
           fi
+          CURRENT_VERSION="v$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).version')"
+          PUBLISHED_VERSION="$(npm view @sreyasts/workflow-lens version 2>/dev/null || true)"
+          if [[ "$PUBLISHED_VERSION" == "${CURRENT_VERSION#v}" ]]; then
+            echo "Version $PUBLISHED_VERSION is already published on npm. Skipping publication."
+            exit 0
+          fi
           npm publish --access public

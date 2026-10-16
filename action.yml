@@ -7,7 +7,7 @@ branding:
 
 inputs:
   workflow:
-    description: 'Path to the workflow YAML file to inspect (or - for stdin)'
+    description: 'Path to a workflow YAML file in the checked-out workspace'
     required: false
     default: '.github/workflows/ci.yml'
   format:
@@ -29,10 +29,22 @@ runs:
         WORKFLOW_LENS_FORMAT: ${{ inputs.format }}
         WORKFLOW_LENS_FAIL_ON_HIGH: ${{ inputs.fail-on-high }}
       run: |
+        workflow_path="$(node -e '
+          const { realpathSync, statSync } = require("node:fs");
+          const { isAbsolute, relative, resolve, sep } = require("node:path");
+          const workspace = realpathSync(process.env.GITHUB_WORKSPACE);
+          const target = realpathSync(resolve(workspace, process.env.WORKFLOW_LENS_WORKFLOW));
+          const fromWorkspace = relative(workspace, target);
+          if (!statSync(target).isFile() || fromWorkspace === ".." || fromWorkspace.startsWith(`..${sep}`) || isAbsolute(fromWorkspace)) {
+            process.stderr.write("Workflow path must name a file inside the checked-out workspace.\n");
+            process.exit(2);
+          }
+          process.stdout.write(target);
+        ')"
         npm ci --prefix "$GITHUB_ACTION_PATH" --ignore-scripts --no-audit --no-fund
         npm run build --prefix "$GITHUB_ACTION_PATH"
 
-        args=("$WORKFLOW_LENS_WORKFLOW")
+        args=("$workflow_path")
         case "$WORKFLOW_LENS_FORMAT" in
           markdown) ;;
           json) args+=(--json) ;;

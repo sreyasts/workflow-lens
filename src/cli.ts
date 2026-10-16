@@ -1,5 +1,28 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readSync, statSync } from 'node:fs';
 import { analyze, markdown, mermaid } from './analyzer.ts';
+
+const MAX_INPUT_BYTES = 256_000;
+
+function readInput(path: string): string {
+  if (path !== '-') {
+    const metadata = statSync(path);
+    if (!metadata.isFile()) throw new Error('Workflow input must be a regular file.');
+    if (metadata.size > MAX_INPUT_BYTES) throw new Error('Workflow exceeds the 256 KB input limit.');
+    return readFileSync(path, 'utf8');
+  }
+
+  const buffer = Buffer.alloc(8192);
+  const chunks: Buffer[] = [];
+  let bytes = 0;
+  while (true) {
+    const count = readSync(0, buffer, 0, Math.min(buffer.length, MAX_INPUT_BYTES + 1 - bytes), null);
+    if (!count) break;
+    bytes += count;
+    if (bytes > MAX_INPUT_BYTES) throw new Error('Workflow exceeds the 256 KB input limit.');
+    chunks.push(Buffer.from(buffer.subarray(0, count)));
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
 
 const args = process.argv.slice(2);
 const input = args.filter(a => !a.startsWith('--'));
@@ -10,7 +33,7 @@ if (args.includes('--help')) {
   console.error('Expected one workflow path or -. Run npm run inspect -- --help.'); process.exitCode = 2;
 } else {
   try {
-    const result = analyze(readFileSync(input[0] === '-' ? 0 : input[0], 'utf8'));
+    const result = analyze(readInput(input[0]));
     if (args.includes('--mermaid') && result.errors.length) {
       console.error(result.errors.join('\n'));
     } else console.log(args.includes('--json') ? JSON.stringify(result, null, 2) : args.includes('--mermaid') ? mermaid(result) : markdown(result));

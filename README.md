@@ -1,6 +1,7 @@
 # Workflow Lens
 
 [![CI Checks](https://github.com/sreyasts/workflow-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/sreyasts/workflow-lens/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@sreyasts/workflow-lens.svg)](https://www.npmjs.com/package/@sreyasts/workflow-lens)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-sreyasts.github.io%2Fworkflow--lens-brightgreen?logo=githubpages)](https://sreyasts.github.io/workflow-lens/)
 [![GitHub Action](https://img.shields.io/badge/GitHub_Action-v0.1.0-blue?logo=githubactions)](action.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -29,52 +30,25 @@ Paste or open a workflow to see its job dependencies, requested token permission
 
 Use **Mermaid diagram** for a standalone map, or **Export report** if clipboard access is unavailable. Exports always include the whole workflow, regardless of view filters.
 
-## Choose the right tool
+## Quick CLI Inspection (npx)
 
-| Need | Tool |
-| --- | --- |
-| Explain job dependencies and requested access visually; share a review artifact | Workflow Lens |
-| Validate workflow syntax, expressions, and more | [actionlint](https://github.com/rhysd/actionlint) |
-| Run deeper GitHub Actions security analysis | [zizmor](https://docs.zizmor.sh/) |
-
-Workflow Lens complements those tools. It does not establish whether a workflow is safe or valid.
-
-The bundled workflows are illustrative examples, not real vulnerability reports. Input is held in memory and is cleared on refresh. Exported reports can contain job names, action references, and secret **names** from your input; review a report before sharing it. Hosting providers still receive ordinary page requests. Opening documentation or repository links leaves the app.
-
-## Run locally
-
-Requires Node.js 22+ and npm.
+Run instantly against any local workflow file without installing anything:
 
 ```sh
-git clone https://github.com/sreyasts/workflow-lens.git
-cd workflow-lens
-npm ci
-npm run dev
+npx @sreyasts/workflow-lens .github/workflows/ci.yml
+npx @sreyasts/workflow-lens .github/workflows/ci.yml --json
+npx @sreyasts/workflow-lens .github/workflows/ci.yml --fail-on-high
+npx @sreyasts/workflow-lens .github/workflows/ci.yml --mermaid > workflow.mmd
 ```
+
+Or install globally:
 
 ```sh
-npm test
-npm run build
-npm run preview
+npm install -g @sreyasts/workflow-lens
+workflow-lens .github/workflows/ci.yml
 ```
 
-The app is static and can be served from any static host. The included Pages workflow deploys the default branch when GitHub Pages uses GitHub Actions as its source.
-
-## CLI
-
-Build and run the CLI from this checkout:
-
-```sh
-npm ci
-npm run build
-npm run inspect -- .github/workflows/ci.yml
-npm run inspect -- .github/workflows/ci.yml --json
-npm run inspect -- .github/workflows/ci.yml --fail-on-high
-npm run inspect -- .github/workflows/ci.yml --mermaid > workflow.mmd
-npm run inspect -- .github/workflows/ci.yml > review.md
-```
-
-The npm package has not been published, so `npx` and global-install commands are not available yet. Use `-` instead of a filename to read stdin. `--json` and `--mermaid` are mutually exclusive. Exit status is 2 for input or parsing errors, 1 for high-priority hints when `--fail-on-high` is set, and 0 otherwise.
+Use `-` instead of a filename to read from stdin (e.g., `cat workflow.yml | npx @sreyasts/workflow-lens -`). `--json` and `--mermaid` are mutually exclusive. Exit status is 2 for input or parsing errors, 1 for high-priority hints when `--fail-on-high` is set, and 0 otherwise.
 
 ## GitHub Action
 
@@ -82,12 +56,14 @@ Run Workflow Lens directly in your GitHub Actions workflows:
 
 ```yaml
 - name: Review Workflow with Workflow Lens
-  uses: sreyasts/workflow-lens@v0
+  uses: sreyasts/workflow-lens@v0.1.0
   with:
     workflow: '.github/workflows/ci.yml'
     format: 'markdown'
     fail-on-high: 'true'
 ```
+
+For production workflows, pin the action to a verified full commit SHA. Version tags such as `v0` and `v0.1.0` can be moved.
 
 ## Scope and limits
 

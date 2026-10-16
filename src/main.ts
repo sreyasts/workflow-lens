@@ -27,7 +27,7 @@ const ICON_INSPECT = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none
 
 const ICON_EXTERNAL = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
 
-const ICON_JOB = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"></rect><path d="m9 12 2 2 4-4"></path></svg>`;
+const ICON_JOB = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><line x1="7" y1="9" x2="17" y2="9"></line><line x1="7" y1="13" x2="13" y2="13"></line></svg>`;
 
 const ICON_REUSABLE = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><line x1="6" y1="9" x2="6" y2="21"></line></svg>`;
 
@@ -54,8 +54,8 @@ root.innerHTML = `
       <span class="brand-tagline">GitHub Actions Inspector</span>
     </div>
     <nav aria-label="Main navigation">
-      <span class="local" title="Client-side static AST parsing only. No network calls or telemetry.">
-        <span class="dot"></span> Client-side only · Zero network calls
+      <span class="local" title="Workflow parsing runs in your browser. Workflow contents are not uploaded by this app.">
+        <span class="dot"></span> Client-side processing · No workflow uploads
       </span>
       <a href="https://github.com/sreyasts/workflow-lens" class="nav-link" target="_blank" rel="noopener noreferrer">
         ${ICON_GITHUB} <span>Source code</span> <span class="external-arr">↗</span>
@@ -70,7 +70,7 @@ root.innerHTML = `
           <span>STATIC PIPELINE REVIEWER</span>
         </div>
         <h1>Review GitHub Actions Before Merging</h1>
-        <p class="subtitle">Inspect token permissions, secret exposure, runner trust boundaries, and job dependency graphs locally in your browser.</p>
+        <p class="subtitle">See requested permissions, secret references, and job dependencies; review static hints locally in your browser.</p>
       </div>
       <div class="intro-features">
         <div class="feature-item">
@@ -141,7 +141,7 @@ root.innerHTML = `
       <div class="below-intro">
         <span class="small-label">SPECIFICATIONS & VERIFICATION</span>
         <h2>Built for code review, before the pipeline runs.</h2>
-        <p>Catch privilege escalation, script injection, and excessive permissions in pull requests before runners execute untrusted code.</p>
+        <p>View job dependencies, requested permissions, and selected review hints before merging. Pair with actionlint and zizmor for workflow validation and deeper security analysis.</p>
       </div>
       <div class="limitations">
         <p><strong>A structural reviewer, not an execution sandbox.</strong> Workflow Lens performs deterministic AST analysis of single YAML files. It cannot evaluate dynamic <code>if</code> expressions, resolve organization permission policies, inspect private external actions, or expand matrix runners at runtime.</p>

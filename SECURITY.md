@@ -1,6 +1,6 @@
 # Security
 
-No versioned releases have been published yet. When releases exist, only the latest release will be supported. This is an early static reviewer; do not use its output as evidence that a workflow is secure.
+The latest stable, versioned release is supported (currently `v0.1.0`). The moving `v0` GitHub Action tag is an alias, not a separate release. The npm package is not published. This is an early static reviewer; do not use its output as evidence that a workflow is secure.
 
 Report application vulnerabilities through [GitHub private vulnerability reporting](https://github.com/sreyasts/workflow-lens/security/advisories/new). Do not post credentials or private workflows in public issues. The maintainer aims to acknowledge reports within 7 calendar days and provide an update at least every 30 days while an issue remains open. If private reporting is unavailable, request a private reporting channel without including vulnerability details.
 

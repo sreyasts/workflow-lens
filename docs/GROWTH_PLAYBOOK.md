@@ -1,8 +1,8 @@
-# Real User Adoption & Star Growth Playbook
+# Maintainer Adoption and Outreach Playbook
 
-To qualify for the **OpenAI Codex for Open Source** program (6 months of ChatGPT Pro + API credits), the repository needs demonstrated community usage, active weekly traffic, and GitHub stars.
+The [OpenAI Codex for Open Source program](https://developers.openai.com/community/codex-for-oss) offers six months of ChatGPT Pro with Codex to selected maintainers. API credits are separate and conditional. The public criteria name maintainer role, project use, and ecosystem importance; they publish no minimum star or traffic count. Admission is discretionary, so do not present any metric here as an eligibility threshold.
 
-This playbook provides copy-paste promotional posts, launch channels, and maintainer outreach templates.
+These are unsent drafts and an experiment plan, not proof of usage. Repo stars, page visits, completed reviews, and voluntary repeat use must be counted separately.
 
 ---
 
@@ -19,17 +19,15 @@ I built Workflow Lens (https://sreyasts.github.io/workflow-lens/), a client-side
 
 Whenever I review pull requests that modify CI/CD workflows, it's hard to spot risky privilege escalations, dynamic secret references, or unpinned dependencies just by reading lines of YAML diffs.
 
-Workflow Lens runs completely inside your browser (zero servers, zero uploads, no analytics, no AI API calls):
+The browser app processes the workflow locally; it has no app backend, workflow uploads, analytics, or AI API calls:
 1. Renders a live Mermaid dependency graph of your jobs (based on `needs`).
-2. Extracts all requested token scopes (contents, write-all, id-token) and secret references.
-3. Flags security review hotspots (e.g. untrusted PR head checkout under pull_request_target, mutable action references, shell injection).
+2. Shows requested token scopes and secret references.
+3. Shows bounded review hints, including selected untrusted expressions interpolated into scripts. It is not a security audit.
 4. Generates a copy-paste PR Markdown review report with the embedded Mermaid diagram for your team.
 
-You can also run it via npx or in CI:
-`npx @sreyasts/workflow-lens .github/workflows/*.yml`
+The npm package is not published. From a source checkout, build and run the CLI with `npm ci`, `npm run build`, then `npm run inspect -- .github/workflows/ci.yml`.
 
-Or as a GitHub Action:
-`uses: sreyasts/workflow-lens@main`
+The composite GitHub Action has a versioned release. Pin a verified full commit SHA in production workflows; `v0` and `v0.1.0` are movable tags.
 
 Live web app: https://sreyasts.github.io/workflow-lens/
 Source code: https://github.com/sreyasts/workflow-lens
@@ -59,7 +57,7 @@ Key points:
 - **Visual Map**: Automatically calculates and draws job dependencies (`needs`).
 - **Access Overview**: Aggregates job permission overrides, workflow defaults, and named secret references.
 - **One-Click PR Report**: Exports a ready-to-paste GitHub PR Markdown comment with a rendered Mermaid diagram.
-- **CLI & GitHub Action**: Can be run via `npx @sreyasts/workflow-lens <file>` or automated in your CI with `action.yml`.
+- **CLI & GitHub Action**: The CLI runs from a source checkout; the composite action can be pinned to a verified commit SHA. The npm package is not published.
 
 Repo: https://github.com/sreyasts/workflow-lens
 Web app: https://sreyasts.github.io/workflow-lens/
@@ -69,14 +67,9 @@ Feedback and sanitized PR workflow examples are welcome!
 
 ---
 
-## 3. GitHub Action Marketplace Listing
+## 3. Optional GitHub Action Marketplace listing
 
-To get high-intent organic users discovering your tool every day:
-1. Navigate to your repository on GitHub.
-2. In the right-hand sidebar or Releases page, click **Draft a release**.
-3. Select the checkbox: **"Publish this Action to the GitHub Community Action Marketplace"**.
-4. Category: **Code quality** / **Continuous integration**.
-5. Once published, your Action appears in GitHub's official search when developers search for "workflow", "security", or "review".
+If you decide to submit the action to the Marketplace, first verify the current submission requirements and confirm the tagged source and support policy are accurate. A listing is distribution, not evidence of use or repeat use.
 
 ---
 
@@ -89,7 +82,7 @@ Hi [Name],
 
 I saw your recent work on [Repository Name]. When reviewing CI changes, do you find it tedious to track job dependencies and token permissions across YAML files?
 
-I created a small, zero-install open-source tool called Workflow Lens (https://sreyasts.github.io/workflow-lens/). It runs completely in the browser, draws a visual DAG of jobs, flags unpinned actions/script injections, and generates a Mermaid PR review comment.
+I created a small open-source tool called Workflow Lens (https://sreyasts.github.io/workflow-lens/). Its browser app visualizes job dependencies and requested permissions, shows selected static review hints, and exports a Mermaid PR report you can review and paste yourself.
 
 If you have a couple minutes, could you test your workflow in it and let me know if the visual breakdown is useful?
 
@@ -98,11 +91,13 @@ Thank you for your time and open-source contributions!
 
 ---
 
-## 5. Target Milestones for OpenAI Grant Submission
+## 5. Evidence gates before an application
 
 | Milestone | Target Metric | Purpose |
 | :--- | :--- | :--- |
-| **Stage 1: Launch** | 50+ Stars, 100+ visits | Initial social proof from Show HN & Reddit |
-| **Stage 2: Integration** | 5+ external repos using `action.yml` | Proof of downstream utility |
-| **Stage 3: Community** | 3+ external issues/PRs filed | Proof of active maintenance |
-| **Stage 4: Application** | Submit form to OpenAI OSS program | Claim 6 months of ChatGPT Pro ($1,200 value) |
+| **Stage 1: Pilot** | Five independent maintainers invited; record consented completed reviews | Test whether the explanation helps with real workflow reviews |
+| **Stage 2: Repeat use** | Count voluntary later reviews separately from first sessions | Measure retention, not stated intent |
+| **Stage 3: Integration** | Verify outside repositories using the action or CLI | Record adoption separately from stars and page visits |
+| **Stage 4: Application** | Submit only verified maintainer/use evidence; state current gaps | OpenAI's decision is discretionary; no benefit is guaranteed |
+
+Do not request API credits without a real planned API workflow and a human review boundary. This product currently makes no API calls.
