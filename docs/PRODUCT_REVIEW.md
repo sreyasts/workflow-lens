@@ -31,4 +31,4 @@ Use the existing [adoption experiment](ADOPTION.md) and [interview script](LAUNC
 
 If reviewers cannot explain a concrete time saving or prefer their current tooling, narrow the product or stop. If multiple reviewers independently ask for before/after access comparison, prioritize that over accounts, AI summaries, or more generic scanner rules. If output misleads them, fix correctness before distribution.
 
-Release `v0.1.0` and the Pages deployment are public. No outreach or completed external reviews are verified; stars and page visits remain separate visibility measures. Public source: https://github.com/sreyasts/workflow-lens.
+Release `v0.1.0` and the Pages deployment are public. The [adoption ledger](ADOPTION.md#evidence-ledger) records one public opt-in recruitment post and zero completed external reviews or voluntary repeats as of 16 October 2026. Stars and page visits remain separate visibility measures. Public source: https://github.com/sreyasts/workflow-lens.

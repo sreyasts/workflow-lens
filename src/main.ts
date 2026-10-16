@@ -41,6 +41,16 @@ const ICON_CHECK = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" 
 
 const ICON_SHIELD = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`;
 
+type Theme = 'light' | 'dark';
+const themeKey = 'workflow-lens-theme';
+function applyTheme(theme: Theme) {
+  document.documentElement.dataset.theme = theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#0d1117' : '#f6f7f2');
+}
+let initialTheme: Theme = 'light';
+try { if (localStorage.getItem(themeKey) === 'dark') initialTheme = 'dark'; } catch { /* Storage may be disabled; switching still works. */ }
+applyTheme(initialTheme);
+
 const root = document.querySelector<HTMLDivElement>('#app')!;
 root.innerHTML = `
   <header class="topbar">
@@ -54,6 +64,13 @@ root.innerHTML = `
       <span class="brand-tagline">Visual workflow map &amp; PR report</span>
     </div>
     <nav aria-label="Main navigation">
+      <details class="settings" id="settings">
+        <summary>Settings</summary>
+        <div class="settings-panel">
+          <label for="theme">Appearance</label>
+          <select id="theme"><option value="light">White · Sage</option><option value="dark">Black · Slate</option></select>
+        </div>
+      </details>
       <span class="local" title="Workflow parsing runs in your browser. Workflow contents are not uploaded by this app.">
         <span class="dot"></span> Client-side processing · No workflow uploads
       </span>
@@ -117,7 +134,7 @@ root.innerHTML = `
             <textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="editor-help"></textarea>
           </div>
           <div class="editor-footer" id="editor-help">
-            <span>Paste or drop YAML · Tab indents</span>
+            <span>Paste or drop YAML · Tab moves focus</span>
             <span id="parse-status" class="status-pill">Ready</span>
           </div>
         </section>
@@ -131,6 +148,7 @@ root.innerHTML = `
             <button id="copy-report" class="btn btn-primary">${ICON_COPY} Copy PR Report</button>
             <button id="export-mermaid" class="btn btn-secondary">${ICON_DIAGRAM} Mermaid Diagram</button>
             <span id="export-status" role="status">Reports include workflow metadata. Review before sharing.</span>
+            <a class="subtle" href="https://github.com/sreyasts/workflow-lens/issues/new?template=review-experience.md" target="_blank" rel="noopener noreferrer">Used this on a real review? Share what helped ↗</a>
           </div>
           <div id="results"></div>
         </section>
@@ -311,7 +329,7 @@ function render() {
             <svg aria-hidden="true" class="edges">
               <defs>
                 <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-                  <path d="M0,0 L8,4 L0,8" fill="#58a6ff"/>
+                  <path d="M0,0 L8,4 L0,8" fill="var(--accent-fg)"/>
                 </marker>
               </defs>
               <g></g>
@@ -414,7 +432,7 @@ function drawEdges() {
     const x1 = from.right - box.left; const y1 = from.top + from.height / 2 - box.top;
     const x2 = to.left - box.left - 4; const y2 = to.top + to.height / 2 - box.top;
     const isSelectedEdge = selectedJob && (job.id === selectedJob || need === selectedJob);
-    const strokeColor = isSelectedEdge ? '#58a6ff' : '#388bfd';
+    const strokeColor = isSelectedEdge ? 'var(--accent-fg)' : 'var(--edge-color)';
     const strokeWidth = isSelectedEdge ? '2.5' : '1.75';
     const opacity = selectedJob && !isSelectedEdge ? '0.3' : '0.85';
     paths.push(`<path d="M${x1},${y1} C${x1 + 24},${y1} ${x2 - 24},${y2} ${x2},${y2}" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" opacity="${opacity}" marker-end="url(#arrow)"/>`);
@@ -468,4 +486,19 @@ workspace.addEventListener('dragover', e => { e.preventDefault(); workspace.clas
 workspace.addEventListener('dragleave', e => { if (!workspace.contains(e.relatedTarget as Node)) workspace.classList.remove('dragging'); });
 workspace.addEventListener('drop', e => { e.preventDefault(); workspace.classList.remove('dragging'); void openFile(e.dataTransfer?.files[0]); });
 addEventListener('resize', drawEdges);
+const themeSelect = document.querySelector<HTMLSelectElement>('#theme')!;
+themeSelect.value = initialTheme;
+themeSelect.onchange = () => {
+  const theme: Theme = themeSelect.value === 'dark' ? 'dark' : 'light';
+  applyTheme(theme);
+  try { localStorage.setItem(themeKey, theme); } catch { /* Keep the selection for this session. */ }
+  announce(`${theme === 'dark' ? 'Black' : 'White'} theme selected`);
+};
+const settings = document.querySelector<HTMLDetailsElement>('#settings')!;
+settings.addEventListener('keydown', event => {
+  if (event.key === 'Escape') { settings.open = false; settings.querySelector('summary')!.focus(); }
+});
+document.addEventListener('click', event => {
+  if (event.target instanceof Node && !settings.contains(event.target)) settings.open = false;
+});
 setSource(examples.risky, 'community-pr.yml', true);
