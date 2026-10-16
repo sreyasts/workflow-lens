@@ -3,7 +3,7 @@
 [![CI Checks](https://github.com/sreyasts/workflow-lens/actions/workflows/ci.yml/badge.svg)](https://github.com/sreyasts/workflow-lens/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/@sreyasts/workflow-lens.svg)](https://www.npmjs.com/package/@sreyasts/workflow-lens)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-sreyasts.github.io%2Fworkflow--lens-brightgreen?logo=githubpages)](https://sreyasts.github.io/workflow-lens/)
-[![GitHub Action](https://img.shields.io/badge/GitHub_Action-v0.1.0-blue?logo=githubactions)](action.yml)
+[![GitHub Action](https://img.shields.io/badge/GitHub_Action-v0_alias-blue?logo=githubactions)](https://github.com/sreyasts/workflow-lens/blob/main/action.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Turn GitHub Actions YAML into a dependency map and a PR review report.**
@@ -54,14 +54,18 @@ Run Workflow Lens directly in your GitHub Actions workflows:
 
 ```yaml
 - name: Review Workflow with Workflow Lens
-  uses: sreyasts/workflow-lens@v0.1.0
+  uses: sreyasts/workflow-lens@v0
   with:
     workflow: '.github/workflows/ci.yml'
     format: 'markdown'
     fail-on-high: 'true'
 ```
 
-For production workflows, pin the action to a verified full commit SHA. Version tags such as `v0` and `v0.1.0` can be moved.
+The `v0` tag follows the latest stable action release and can move. For production workflows, pin the action to a verified full commit SHA.
+
+## Supported versions
+
+Only the latest stable versioned release is supported. The npm CLI package requires Node.js 22.18.0 or later; CI currently checks Node.js 22.18.0 and 24. Older releases receive no maintenance guarantee. See the [release policy](https://github.com/sreyasts/workflow-lens/blob/main/docs/RELEASE.md).
 
 ## Scope and limits
 

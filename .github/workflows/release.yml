@@ -5,10 +5,10 @@ on:
       - 'v*.*.*'
 permissions: {}
 jobs:
-  release:
+  verify:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: Validate release tag
         if: startsWith(github.ref, 'refs/tags/v')
@@ -25,8 +25,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 24
-          registry-url: 'https://registry.npmjs.org'
-          cache: npm
+          package-manager-cache: false
       - run: npm ci
       - run: npm test
       - run: npm run build
@@ -40,6 +39,64 @@ jobs:
             echo "Tag $RELEASE_TAG does not match package version $PACKAGE_TAG." >&2
             exit 1
           fi
+          RELEASE_VERSION="${PACKAGE_TAG#v}"
+          if ! awk -v version="$RELEASE_VERSION" '$0 ~ "^## " version "([[:space:]]|$)" { found = 1 } END { exit !found }' CHANGELOG.md; then
+            echo "CHANGELOG.md has no release section for $RELEASE_VERSION." >&2
+            exit 1
+          fi
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+      - name: Check npm OIDC support
+        shell: bash
+        run: |
+          NPM_VERSION="$(npm --version)"
+          node - "$NPM_VERSION" <<'NODE'
+          const [major, minor, patch] = process.argv[2].split('.').map(Number);
+          if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) {
+            console.error(`npm ${process.argv[2]} is too old for trusted publishing; use npm 11.5.1 or later.`);
+            process.exit(1);
+          }
+          NODE
+      - run: npm ci
+      - run: npm run build
+      - name: Publish immutable npm version with OIDC
+        shell: bash
+        run: |
+          PACKAGE_VERSION="$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).version')"
+          npm pack --dry-run --json > "$RUNNER_TEMP/npm-pack.json"
+          LOCAL_INTEGRITY="$(node -p 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"))[0].integrity' "$RUNNER_TEMP/npm-pack.json")"
+          PUBLISHED_INTEGRITY="$(npm view "@sreyasts/workflow-lens@$PACKAGE_VERSION" dist.integrity 2>/dev/null || true)"
+          if [[ -n "$PUBLISHED_INTEGRITY" ]]; then
+            if [[ "$PUBLISHED_INTEGRITY" != "$LOCAL_INTEGRITY" ]]; then
+              echo "Version $PACKAGE_VERSION is already published with different contents." >&2
+              exit 1
+            fi
+            echo "Version $PACKAGE_VERSION already contains this exact package; skipping republish."
+          else
+            npm publish --access public
+          fi
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
@@ -59,19 +116,3 @@ jobs:
             ' CHANGELOG.md > "$NOTES_FILE"
             gh release create "$RELEASE_TAG" --title "Workflow Lens $RELEASE_TAG" --notes-file "$NOTES_FILE"
           fi
-      - name: Publish to npm
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [[ -z "$NODE_AUTH_TOKEN" ]]; then
-            echo "NPM_TOKEN is unset; skipping npm publication."
-            exit 0
-          fi
-          CURRENT_VERSION="v$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).version')"
-          PUBLISHED_VERSION="$(npm view @sreyasts/workflow-lens version 2>/dev/null || true)"
-          if [[ "$PUBLISHED_VERSION" == "${CURRENT_VERSION#v}" ]]; then
-            echo "Version $PUBLISHED_VERSION is already published on npm. Skipping publication."
-            exit 0
-          fi
-          npm publish --access public
