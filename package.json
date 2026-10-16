@@ -1,0 +1,26 @@
+{
+  "name": "@sreyasts/workflow-lens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local visual review of GitHub Actions permissions, dependencies, and review hotspots.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build --base=./",
+    "test": "node --test tests/*.test.ts",
+    "inspect": "node src/cli.ts",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  }
+}
