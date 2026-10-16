@@ -78,7 +78,16 @@ The npm package has not been published, so `npx` and global-install commands are
 
 ## GitHub Action
 
-The composite action is not released under a stable reference yet. Do not use `@main` in production workflows; pin a full commit SHA once the action is available from the public repository.
+Run Workflow Lens directly in your GitHub Actions workflows:
+
+```yaml
+- name: Review Workflow with Workflow Lens
+  uses: sreyasts/workflow-lens@v0
+  with:
+    workflow: '.github/workflows/ci.yml'
+    format: 'markdown'
+    fail-on-high: 'true'
+```
 
 ## Scope and limits
 
