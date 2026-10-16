@@ -3,7 +3,6 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  workflow_dispatch:
 permissions: {}
 jobs:
   release:
@@ -61,6 +60,7 @@ jobs:
             gh release create "$RELEASE_TAG" --title "Workflow Lens $RELEASE_TAG" --notes-file "$NOTES_FILE"
           fi
       - name: Publish to npm
+        if: startsWith(github.ref, 'refs/tags/v')
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |

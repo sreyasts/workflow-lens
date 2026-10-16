@@ -1,27 +1,38 @@
-import { readFileSync, readSync, statSync } from 'node:fs';
+import { closeSync, fstatSync, openSync, readSync, statSync } from 'node:fs';
 import { analyze, markdown, mermaid } from './analyzer.ts';
 
 const MAX_INPUT_BYTES = 256_000;
 
-function readInput(path: string): string {
-  if (path !== '-') {
-    const metadata = statSync(path);
-    if (!metadata.isFile()) throw new Error('Workflow input must be a regular file.');
-    if (metadata.size > MAX_INPUT_BYTES) throw new Error('Workflow exceeds the 256 KB input limit.');
-    return readFileSync(path, 'utf8');
-  }
-
+function readBounded(fd: number): string {
   const buffer = Buffer.alloc(8192);
   const chunks: Buffer[] = [];
   let bytes = 0;
   while (true) {
-    const count = readSync(0, buffer, 0, Math.min(buffer.length, MAX_INPUT_BYTES + 1 - bytes), null);
+    const count = readSync(fd, buffer, 0, Math.min(buffer.length, MAX_INPUT_BYTES + 1 - bytes), null);
     if (!count) break;
     bytes += count;
     if (bytes > MAX_INPUT_BYTES) throw new Error('Workflow exceeds the 256 KB input limit.');
     chunks.push(Buffer.from(buffer.subarray(0, count)));
   }
   return Buffer.concat(chunks).toString('utf8');
+}
+
+function readInput(path: string): string {
+  if (path === '-') return readBounded(0);
+
+  const pathMetadata = statSync(path);
+  if (!pathMetadata.isFile()) throw new Error('Workflow input must be a regular file.');
+  if (pathMetadata.size > MAX_INPUT_BYTES) throw new Error('Workflow exceeds the 256 KB input limit.');
+
+  const fd = openSync(path, 'r');
+  try {
+    const metadata = fstatSync(fd);
+    if (!metadata.isFile()) throw new Error('Workflow input must be a regular file.');
+    if (metadata.size > MAX_INPUT_BYTES) throw new Error('Workflow exceeds the 256 KB input limit.');
+    return readBounded(fd);
+  } finally {
+    closeSync(fd);
+  }
 }
 
 const args = process.argv.slice(2);

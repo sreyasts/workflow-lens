@@ -12,8 +12,6 @@
 
 Paste or open a workflow to see its job dependencies, requested token permissions, secret references, and review hints. Processing happens on your device. No sign-in, uploads, external fonts, analytics, or AI API calls.
 
-![Workflow Lens interface](docs/screenshot.jpg)
-
 ## What it does
 
 - Draws the dependency map for a single YAML workflow; select a job for access details.
@@ -32,7 +30,7 @@ Use **Mermaid diagram** for a standalone map, or **Export report** if clipboard 
 
 ## Quick CLI Inspection (npx)
 
-Run instantly against any local workflow file without installing anything:
+Requires Node.js 22.18.0 or later. `npx` downloads and runs the published package without a project installation:
 
 ```sh
 npx @sreyasts/workflow-lens .github/workflows/ci.yml
