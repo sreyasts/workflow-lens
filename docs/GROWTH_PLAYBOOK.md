@@ -8,12 +8,13 @@ These are unsent drafts and an experiment plan, not proof of usage. Repo stars, 
 
 ## 1. Curated Directory Submission — `awesome-actions`
 
-Submit a pull request to [sdras/awesome-actions](https://github.com/sdras/awesome-actions) (25k+ stars), the primary curated index for GitHub Actions:
+Submitted Pull Request to [sdras/awesome-actions](https://github.com/sdras/awesome-actions) (25k+ stars):
 
-- **Section**: Utility Actions / Testing & Linting
-- **Suggested Entry**:
+- **Pull Request**: [sdras/awesome-actions#995](https://github.com/sdras/awesome-actions/pull/995) (Status: **OPEN**)
+- **Target Section**: `Static Analysis`
+- **Submitted Entry**:
 ```markdown
-* [Workflow Lens](https://github.com/sreyasts/workflow-lens) - Client-side inspector and Action to review job dependencies, requested permissions, secret references, and review hotspots.
+- [Inspect and Review GitHub Actions Workflows with Workflow Lens](https://github.com/sreyasts/workflow-lens) - Audit dependencies, token permissions, secret references, and review hints.
 ```
 
 ---

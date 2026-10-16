@@ -157,11 +157,57 @@ test('CLI caps stdin before allocating an oversized workflow', () => {
   assert.match(result.stderr, /256 KB input limit/);
 });
 
+test('CLI rejects oversized workflow files before reading them', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'workflow-lens-large-file-'));
+  const path = join(directory, 'large.yml');
+  writeFileSync(path, 'x'.repeat(256_001));
+  try {
+    const result = spawnSync(process.execPath, ['src/cli.ts', path], { encoding: 'utf8' });
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /256 KB input limit/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI reads valid workflow files from their file descriptor', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'workflow-lens-file-input-'));
+  const path = join(directory, 'workflow.yml');
+  writeFileSync(path, examples.minimal);
+  try {
+    const result = spawnSync(process.execPath, ['src/cli.ts', path, '--json'], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).jobs.length, 2);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('CLI rejects directories before opening them as workflow files', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'workflow-lens-directory-input-'));
+  try {
+    const result = spawnSync(process.execPath, ['src/cli.ts', directory], { encoding: 'utf8' });
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /regular file/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test('job-level container triggers unpinned hint unless digest-pinned', () => {
   const mutable = analyze(workflow('    container: node:latest\n    steps: []'));
   assert.ok(mutable.findings.some(f => f.rule === 'unpinned-container' && f.job === 'test'));
   const pinned = analyze(workflow(`    container: node@sha256:${'b'.repeat(64)}\n    steps: []`));
   assert.ok(!pinned.findings.some(f => f.rule === 'unpinned-container'));
+});
+
+test('script injection heuristic covers hyphenated action input keys', () => {
+  for (const expression of ["inputs['release-channel']", "github.event.inputs['release-channel']"]) {
+    const result = analyze(workflow(`    steps:\n      - run: echo "${'${{'} ${expression} }}"`));
+    assert.ok(result.findings.some(f => f.rule === 'script-injection'), `${expression} should be flagged`);
+  }
 });
 
 test('all supported untrusted event contexts detect script injection', () => {

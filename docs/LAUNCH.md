@@ -8,7 +8,7 @@ I built Workflow Lens, a small open-source tool for understanding GitHub Actions
 
 Open a local YAML file to see job dependencies, requested token permissions, secret references, and source-linked review hints. It runs in your browser without uploading the workflow or requiring an account. There is also a CLI with Markdown and JSON output.
 
-It is an early explanation tool, not a replacement for zizmor, actionlint, or a security review. It does not evaluate conditions or inspect external actions. You can test workflows instantly via `npx @sreyasts/workflow-lens <workflow.yml>`. A versioned GitHub Action release (`v0.1.0`) is also available; production workflows should pin its verified full commit SHA.
+It is an early explanation tool, not a replacement for zizmor, actionlint, or a security review. It does not evaluate conditions or inspect external actions. The published `npx @sreyasts/workflow-lens <workflow.yml>` CLI requires Node.js 22.18.0 or later. A versioned GitHub Action release (`v0.1.0`) is also available; production workflows should pin its verified full commit SHA.
 
 If you maintain a repository with GitHub Actions: does this help you review a real workflow change? I am particularly interested in confusing output, false positives, and things your existing tools explain better. Please share only sanitized examples.
 

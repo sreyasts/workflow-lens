@@ -16,17 +16,34 @@ Evidence of the underlying problem: [GitHub's secure-use guidance](https://docs.
 4. Fix the largest observed problem and ask whether they independently use it again on a later workflow change.
 5. Continue only if at least three voluntarily return or integrate the CLI into an actual workflow. If they prefer their current tools, change the scope or contribute upstream instead of adding features speculatively.
 
-These are experiment gates, not forecasts or OpenAI eligibility rules. No outreach has been sent. Suggested channels, subject to their posting rules: relevant maintainer communities, GitHub Actions discussions, and a focused technical demonstration. Do not mass-message maintainers or post unsolicited security findings.
+These are experiment gates, not forecasts or OpenAI eligibility rules. A public, opt-in recruitment call was posted in [GitHub Discussions](https://github.com/sreyasts/workflow-lens/discussions/5) on 16 October 2026. No one-to-one invitations have been sent. Do not mass-message maintainers or post unsolicited security findings.
 
 ## Honest measures
 
 Record consenting testers, meaningful completed reviews, repeat usage, external reports, and downstream integrations separately. Repository stars, page visits, and downloads are visibility signals; none establishes retention. Do not count your own accounts or a friend's extra accounts as independent interest. Do not buy, trade, or incentivize stars. No analytics or remote user data collection is implemented.
 
+## Evidence ledger
+
+Snapshot: 16 October 2026. A discussion reply is interest only; it is not a review or user.
+
+| Measure | Count | Meaning |
+| --- | ---: | --- |
+| Public opt-in recruitment posts | 1 | [Discussion #5](https://github.com/sreyasts/workflow-lens/discussions/5) |
+| Replies to the recruitment post | 0 | No interest expressed yet |
+| Independent maintainer opt-ins | 0 | No participants verified yet |
+| Completed review sessions | 0 | No workflow task completed with a participant |
+| Voluntary repeat reviews | 0 | No later use observed or reported |
+| External reports or integrations | 0 | None verified |
+| GitHub stars | 1 | Visibility only; stargazer independence not established |
+| GitHub forks | 0 | No downstream fork observed |
+| GitHub repository views/clones, latest 14 days | 0 / 0 | Pages traffic is not measured |
+| npm downloads | Unverified | npm's downloads endpoint returned 404 although the registry package exists; this is not a zero count |
+
 ## OpenAI program
 
-The [official program](https://developers.openai.com/community/codex-for-oss) advertises six months of ChatGPT Pro including Codex, plus conditional Security access and possible API credits. The official page publishes no numerical star threshold. Selection considers maintainer and ecosystem evidence and is discretionary under the [program terms](https://learn.chatgpt.com/docs/codex-for-oss-terms).
+The [official program](https://developers.openai.com/community/codex-for-oss) advertises six months of ChatGPT Pro including Codex, plus conditional Security access and possible API credits. The official page publishes no numerical star threshold. Selection considers maintainer and ecosystem evidence and is discretionary under the [program terms](https://learn.chatgpt.com/docs/codex-for-oss-terms). The maintainer's current plan is to defer applying until the project has independent completed reviews, voluntary repeat use, and broader adoption evidence; this is a project decision, not an OpenAI eligibility rule.
 
-Build because the tool is useful even without a grant. Apply with accurate evidence when available. Never label test activity, self-authored issues, or synthetic examples as real community adoption.
+Build because the tool is useful even without a grant. After at least three of five pilot maintainers voluntarily return or integrate it, broaden recruitment and record real downstream use before applying. Request API credits only if maintainers adopt a concrete Codex-powered PR-review, automation, or release workflow. Never label test activity, self-authored issues, or synthetic examples as real community adoption.
 
 ## What would change the direction
 

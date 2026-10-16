@@ -10,7 +10,7 @@
 
 ## 0.1.0 — 2026-10-16
 
-- Add a standalone CLI entrypoint (`bin/workflow-lens.js`) for source checkouts. The npm package is not published, so `npx` installation is unavailable.
+- Publish the CLI package as `@sreyasts/workflow-lens@0.1.0`; it requires Node.js 22.18.0 or later.
 - Add composite GitHub Action (`action.yml`) for automated CI workflow inspection.
 - Add job-level container unpinned reference detection (`unpinned-container`).
 - Expand script injection detection to cover `review_comment.body`, `head_commit.message`, and `inputs.*`.
@@ -21,3 +21,5 @@
 - Include dynamic environment secret references alongside named secrets.
 - Restore normal Tab/Shift+Tab navigation out of the source editor.
 - Test the CLI and composite action in GitHub Actions on Node.js 22 and 24.
+
+The `0.1.0` package was published on 2026-10-16. Its immutable npm README still needs correction in a later version. The existing GitHub release descriptions were corrected on 2026-10-16.
