@@ -112,6 +112,22 @@ nav a {
   text-decoration: none;
   font-weight: 600;
 }
+.star-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: #203d31;
+  color: #d9efbb !important;
+  font-size: 12px;
+  font-weight: 600;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.star-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
 .local {
   display: flex;
   gap: 7px;

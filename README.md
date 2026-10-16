@@ -43,7 +43,7 @@ The bundled workflows are illustrative examples, not real vulnerability reports.
 
 ## Run locally
 
-Requires Node.js 24+ and npm.
+Requires Node.js 22+ and npm.
 
 ```sh
 git clone https://github.com/sreyasts/workflow-lens.git
