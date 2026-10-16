@@ -1,0 +1,45 @@
+name: 'Workflow Lens'
+description: 'Inspect GitHub Actions workflows for dependencies, requested token permissions, secret references, and review hotspots.'
+author: 'sreyasts'
+branding:
+  icon: 'eye'
+  color: 'green'
+
+inputs:
+  workflow:
+    description: 'Path to the workflow YAML file to inspect (or - for stdin)'
+    required: false
+    default: '.github/workflows/ci.yml'
+  format:
+    description: 'Output format: markdown, json, or mermaid'
+    required: false
+    default: 'markdown'
+  fail-on-high:
+    description: 'Exit with code 1 if high-severity review hints are detected'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Workflow Lens
+      shell: bash
+      env:
+        WORKFLOW_LENS_WORKFLOW: ${{ inputs.workflow }}
+        WORKFLOW_LENS_FORMAT: ${{ inputs.format }}
+        WORKFLOW_LENS_FAIL_ON_HIGH: ${{ inputs.fail-on-high }}
+      run: |
+        npm ci --prefix "$GITHUB_ACTION_PATH" --ignore-scripts --no-audit --no-fund
+        npm run build --prefix "$GITHUB_ACTION_PATH"
+
+        args=("$WORKFLOW_LENS_WORKFLOW")
+        case "$WORKFLOW_LENS_FORMAT" in
+          markdown) ;;
+          json) args+=(--json) ;;
+          mermaid) args+=(--mermaid) ;;
+          *) echo "Unsupported Workflow Lens format." >&2; exit 2 ;;
+        esac
+        if [ "$WORKFLOW_LENS_FAIL_ON_HIGH" = "true" ]; then
+          args+=(--fail-on-high)
+        fi
+        node "$GITHUB_ACTION_PATH/bin/workflow-lens.js" "${args[@]}"

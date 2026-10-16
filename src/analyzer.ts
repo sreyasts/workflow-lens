@@ -35,7 +35,7 @@ function strings(value: unknown, found: string[] = [], depth = 0): string[] {
   return found;
 }
 function secretNames(value: unknown): string[] {
-  const names = strings(value).flatMap(s => Array.from(s.matchAll(/\bsecrets(?:\.([A-Za-z_][\w]*)|\[['"]([^'"\]]+)['"]\])/g), m => m[1] || m[2]));
+  const names = strings(value).flatMap(s => Array.from(s.matchAll(/\bsecrets(?:\.([A-Za-z_][\w]*)|\[\s*['"]([^'"\]]+)['"]\s*\])/g), m => m[1] || m[2]));
   return [...new Set(names)];
 }
 
@@ -85,7 +85,7 @@ export function analyze(source: string): Analysis {
       const effectiveEnv = { ...(obj(root.env) ? root.env : {}), ...(obj(raw.env) ? raw.env : {}) };
       const secrets = [...new Set([...secretNames(raw), ...secretNames(effectiveEnv)])];
       if (raw.secrets === 'inherit') secrets.push('(all available secrets inherited)');
-      if (strings(raw).some(s => /\$\{\{[^}]*\bsecrets\b/.test(s)) && !secrets.length) secrets.push('(dynamic secret expression)');
+      if (strings([raw, effectiveEnv]).some(s => /\$\{\{[^}]*\bsecrets\s*\[\s*[^'"\s]/.test(s) || /\$\{\{\s*(?:toJSON\s*\(\s*)?secrets\s*(?:\)|\}\})/i.test(s))) secrets.push('(dynamic secret expression)');
       result.jobs.push({ id, name: text(raw.name) || id, line: line(path), needs: list(raw.needs),
         runner: runner.join(', ') || (obj(raw['runs-on']) ? JSON.stringify(raw['runs-on']) : reusable ? 'Reusable workflow' : 'Unknown'),
         permissions: perms, inheritedPermissions: !own(raw, 'permissions'), secrets,
@@ -95,6 +95,10 @@ export function analyze(source: string): Analysis {
       if (raw.permissions === 'write-all') add('job-write-all', 'medium', 'Job requests write-all', `${id} requests broad write access.`, 'Grant only the scopes this job needs.', [...path, 'permissions'], id);
       if (runner.includes('self-hosted') && result.events.some(e => /pull_request/.test(e))) add('self-hosted-pr', 'high', 'PR-triggered job uses a self-hosted runner', 'Contributor code may persist on a runner. Actual exposure depends on repository visibility, approvals, and runner isolation.', 'Use an isolated ephemeral runner and review which contributors can trigger it.', [...path, 'runs-on'], id);
       if (raw.secrets === 'inherit') add('inherit-secrets', 'medium', 'Reusable workflow inherits secrets', 'The called workflow can receive all secrets available to this call.', 'Pass only explicitly required named secrets; inspect the called workflow.', [...path, 'secrets'], id);
+      const jobContainer = typeof raw.container === 'string' ? raw.container : obj(raw.container) ? text(raw.container.image) : '';
+      if (jobContainer && !jobContainer.startsWith('./') && !/@sha256:[a-f\d]{64}$/i.test(jobContainer) && !/@[a-f\d]{40}$/i.test(jobContainer)) {
+        add('unpinned-container', 'info', 'Job container reference is mutable', jobContainer, 'Use a reviewed image digest.', [...path, 'container'], id);
+      }
       if (reusable) {
         result.warnings.push(`Called workflow ${raw.uses} is not fetched or expanded.`);
         if (!text(raw.uses).startsWith('./') && !/@[a-f\d]{40}$/i.test(text(raw.uses))) add('unpinned-workflow', 'medium', 'Reusable workflow uses a mutable reference', text(raw.uses), 'Use a reviewed full commit SHA or an appropriate verified dependency lockfile.', [...path, 'uses'], id);
@@ -106,12 +110,13 @@ export function analyze(source: string): Analysis {
         const uses = text(step.uses); const run = text(step.run); const withObj = obj(step.with) ? step.with : {};
         if (uses && !uses.startsWith('./') && !uses.startsWith('docker://') && !/@[a-f\d]{40}$/i.test(uses)) add('unpinned-action', 'info', 'Action uses a mutable reference', uses, 'Review the action and pin a full commit SHA, or use an appropriate verified dependency lockfile.', [...stepPath, 'uses'], id, index);
         if (uses.startsWith('docker://') && !/@sha256:[a-f\d]{64}$/i.test(uses)) add('unpinned-container', 'info', 'Container reference is mutable', uses, 'Use a reviewed image digest.', [...stepPath, 'uses'], id, index);
-        if (/\$\{\{[\s\S]*?github\.(?:event\.(?:pull_request\.(?:title|body|head\.(?:ref|label))|issue\.(?:title|body)|comment\.body|discussion\.(?:title|body)|review\.body)|head_ref)[\s\S]*?\}\}/.test(run)) add('script-injection', 'high', 'Untrusted context is interpolated into a script', 'PR, issue, branch, or comment text is inserted into the generated shell script. This is a review heuristic; expression parsing is not complete.', 'Pass the value through an environment variable and quote it using your shell conventions. Avoid eval.', [...stepPath, 'run'], id, index);
+        const untrustedContext = /\$\{\{[\s\S]*?(?:github\.(?:event\.(?:pull_request\.(?:title|body|head\.(?:ref|label))|workflow_run\.(?:head_branch|display_title|head_commit\.message)|issue\.(?:title|body)|(?:review_)?comment\.body|discussion(?:_comment)?\.(?:title|body)|review\.body|head_commit\.(?:message|author\.(?:name|email)))|head_ref|ref_name|ref)|(?:github\.event\.)?inputs(?:\.[\w.-]+|\[\s*['"][^'"]+['"]\s*\]))[\s\S]*?\}\}/.test(run);
+        if (untrustedContext) add('script-injection', 'high', 'Untrusted context is interpolated into a script', 'PR, issue, branch, or comment text is inserted into the generated shell script. This is a review heuristic; expression parsing is not complete.', 'Pass the value through an environment variable and quote it using your shell conventions. Avoid eval.', [...stepPath, 'run'], id, index);
         const checkout = /^actions\/checkout@/i.test(uses);
         const untrustedRef = strings(withObj).some(s => /github\.event\.(pull_request\.head|workflow_run\.head)|refs\/pull\//.test(s));
         if (privileged && checkout && untrustedRef) add('privileged-checkout', 'high', 'Privileged workflow checks out a PR or run head', 'Untrusted code is placed in a privileged job workspace; later execution can expose credentials or caches. Checkout versions may add protections.', 'Avoid checking out untrusted heads in this context. Separate unprivileged tests from privileged operations.', [...stepPath, 'with'], id, index);
         if (checkout && withObj['persist-credentials'] !== false) add('persist-credentials', 'info', 'Checkout keeps credentials available', 'Checkout is not explicitly configured with persist-credentials: false. Other steps may be able to use its credentials.', 'Set persist-credentials: false when later Git operations do not need authentication.', stepPath, id, index);
-        if (/\b(?:curl|wget)\b[^\n]*\|\s*(?:sudo\s+)?(?:bash|sh|zsh)\b/.test(run)) add('remote-script', 'medium', 'Downloaded content is piped to a shell', 'Remote content can execute immediately without a separate integrity check.', 'Download a fixed version, verify its integrity, and inspect before execution.', [...stepPath, 'run'], id, index);
+        if (/\b(?:curl|wget)\b[^\n]*\|\s*(?:sudo\b[^\n|]*?\s+)?(?:bash|sh|zsh|dash|python\d?|perl|ruby)\b/i.test(run)) add('remote-script', 'medium', 'Downloaded content is piped to a shell', 'Remote content can execute immediately without a separate integrity check.', 'Download a fixed version, verify its integrity, and inspect before execution.', [...stepPath, 'run'], id, index);
       });
     }
     const ids = new Set(result.jobs.map(j => j.id));
@@ -131,11 +136,27 @@ export function analyze(source: string): Analysis {
   return result;
 }
 
+// Encode Markdown syntax triggers and HTML characters so workflow-controlled text
+// cannot create Markdown links, images, HTML, headings, or code fences in a report pasted into a PR.
+const reportText = (value: string): string => value.replace(/[\r\n]+/g, ' ').replace(/[&<>"'`*_\[\]()!#|~\\]/g, c => `&#${c.codePointAt(0)};`);
+
+/** GitHub-compatible Mermaid with generated IDs and inert quoted labels. */
+export function mermaid(result: Analysis): string {
+  if (result.errors.length) throw new Error('Fix workflow errors before exporting a diagram.');
+  const ids = new Map(result.jobs.map((j, i) => [j.id, `job${i}`]));
+  const label = (value: string) => value.replace(/[\r\n]+/g, ' ').replace(/[^\p{L}\p{N} ]/gu, c => `#${c.codePointAt(0)};`);
+  return ['flowchart LR', '  %% Static needs dependencies; conditions are not evaluated.',
+    ...result.jobs.map(j => `  ${ids.get(j.id)}["${label(j.name === j.id ? j.id : `${j.name} (${j.id})`)}"]`),
+    ...result.jobs.flatMap(j => j.needs.filter(n => ids.has(n)).map(n => `  ${ids.get(n)} --> ${ids.get(j.id)}`)),
+    ''].join('\n');
+}
+
 export function markdown(result: Analysis): string {
-  return [`# Workflow Lens: ${result.name}`, '', 'Static review hints, not a security certification. No workflow was executed.', '',
-    `Triggers: ${result.events.join(', ') || 'none'} | Jobs: ${result.jobs.length}`, '',
-    ...result.errors.map(e => `ERROR: ${e}`),
-    ...result.jobs.flatMap(j => [`## Job: ${j.id}`, `Runner: ${j.runner}`, `Needs: ${j.needs.join(', ') || 'none'}`, `Requested permissions: ${JSON.stringify(j.permissions)}`, `Secret references: ${j.secrets.join(', ') || 'none detected'}`, '']),
-    ...result.findings.flatMap(f => [`## ${f.severity.toUpperCase()}: ${f.title}`, `Rule: ${f.rule} | Line: ${f.line}${f.job ? ` | Job: ${f.job}` : ''}`, f.detail, `Review: ${f.advice}`, `Reference: ${f.source}`, '']),
-    '## Limits', ...result.warnings, ''].join('\n');
+  return [`# Workflow Lens: ${reportText(result.name)}`, '', 'Static review hints, not a security certification. No workflow was executed.', '',
+    `Triggers: ${reportText(result.events.join(', ') || 'none')} | Jobs: ${result.jobs.length}`, '',
+    ...result.errors.map(e => `ERROR: ${reportText(e)}`),
+    ...(!result.errors.length ? ['## Job dependencies', '', '```mermaid', mermaid(result).trimEnd(), '```', '', 'Arrows show needs dependencies. Conditions are not evaluated.', ''] : []),
+    ...result.jobs.flatMap(j => [`## Job: ${reportText(j.id)}`, `Runner: ${reportText(j.runner)}`, `Needs: ${reportText(j.needs.join(', ') || 'none')}`, `Requested permissions: ${reportText(JSON.stringify(j.permissions))}`, `Secret references: ${reportText(j.secrets.join(', ') || 'none detected')}`, '']),
+    ...result.findings.flatMap(f => [`## ${f.severity.toUpperCase()}: ${reportText(f.title)}`, `Rule: ${f.rule} | Line: ${f.line}${f.job ? ` | Job: ${reportText(f.job)}` : ''}`, reportText(f.detail), `Review: ${reportText(f.advice)}`, `Reference: ${f.source}`, '']),
+    '## Limits', ...result.warnings.map(reportText), ''].join('\n');
 }

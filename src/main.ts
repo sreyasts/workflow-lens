@@ -1,5 +1,5 @@
 import './style.css';
-import { analyze, markdown } from './analyzer.ts';
+import { analyze, markdown, mermaid } from './analyzer.ts';
 import type { Analysis, Finding, Severity } from './analyzer.ts';
 import { examples } from './examples.ts';
 
@@ -7,11 +7,11 @@ const escape = (s: unknown): string => String(s).replace(/[&<>"']/g, c => ({ '&'
 const root = document.querySelector<HTMLDivElement>('#app')!;
 root.innerHTML = `
   <header class="topbar"><a class="brand" href="./" aria-label="Workflow Lens home"><span class="logo" aria-hidden="true">⌘</span>workflow<span class="brand-light">lens</span><span class="version">v0.1</span></a><nav aria-label="Main"><span class="local"><i></i> Runs on your device</span><a href="https://github.com/sreyasts/workflow-lens" target="_blank" rel="noopener noreferrer">Source code ↗</a></nav></header>
-  <main><section class="intro"><div><p class="eyebrow">GITHUB ACTIONS, MADE VISIBLE</p><h1>See what your<br><em>workflow can do.</em></h1><p class="subtitle">Follow the jobs. Understand the permissions.<br>Spot the boundaries that deserve a closer look.</p></div><aside class="intro-note"><span class="note-symbol" aria-hidden="true">↳</span><p>Your YAML stays here.</p><span>No account. No uploads. No AI calls.<br>Just a workflow and a clearer picture.</span></aside></section>
+  <main><section class="intro"><div><p class="eyebrow">GITHUB ACTIONS, MADE VISIBLE</p><h1>See what your<br><em>workflow can do.</em></h1><p class="subtitle">Review a GitHub Actions workflow before you merge.<br>Map dependencies and access. Copy the report into your PR.</p></div><aside class="intro-note"><span class="note-symbol" aria-hidden="true">↳</span><p>Your YAML stays here.</p><span>No account. No uploads. No AI calls.<br>Just a workflow and a clearer picture.</span></aside></section>
   <section class="workspace" aria-label="Workflow inspector">
     <div class="workspace-toolbar"><div class="workspace-label"><span class="dot"></span> WORKSPACE <span id="filename">demo.yml</span></div><div class="tools"><label class="sr-only" for="example">Example workflow</label><select id="example"><option value="risky">Example: PR trust boundary</option><option value="minimal">Example: Minimal CI</option><option value="reusable">Example: Reusable release</option></select><button id="open">Open .yml <span aria-hidden="true">↥</span></button><input type="file" id="file" accept=".yml,.yaml,text/yaml,text/plain" hidden><button id="clear" class="subtle">Clear</button></div></div>
-    <div class="panels"><section class="editor-panel" aria-labelledby="editor-heading"><div class="panel-heading"><h2 id="editor-heading"><span class="number">01</span> Workflow source</h2><span id="line-count"></span></div><div class="editor-wrap"><div id="line-numbers" aria-hidden="true"></div><label class="sr-only" for="editor">Workflow YAML source</label><textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="editor-help"></textarea></div><div class="editor-footer" id="editor-help">YAML <span>Paste a workflow or drop a .yml file</span><span id="parse-status">Ready</span></div></section>
-    <section class="output-panel" aria-labelledby="output-heading"><div class="panel-heading"><h2 id="output-heading"><span class="number">02</span> The bigger picture</h2><button id="export-md" class="subtle">Export report ↓</button></div><div id="results"></div></section></div>
+    <div class="panels"><section class="editor-panel" aria-labelledby="editor-heading"><div class="panel-heading"><h2 id="editor-heading"><span class="number">01</span> Workflow source</h2><span id="line-count"></span></div><div class="editor-wrap"><div id="line-numbers" aria-hidden="true"></div><label class="sr-only" for="editor">Workflow YAML source</label><textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="editor-help"></textarea></div><div class="editor-footer" id="editor-help">YAML <span>Paste or drop YAML · Tab moves focus</span><span id="parse-status">Ready</span></div></section>
+    <section class="output-panel" aria-labelledby="output-heading"><div class="panel-heading"><h2 id="output-heading"><span class="number">02</span> The bigger picture</h2><button id="export-md" class="subtle">Export report ↓</button></div><div class="export-tools" aria-label="Share analysis"><button id="copy-report">Copy PR report</button><button id="export-mermaid">Mermaid diagram ↓</button><span id="export-status" role="status">Reports include workflow metadata. Review before sharing.</span></div><div id="results"></div></section></div>
   </section>
   <section class="below"><div><span class="small-label">BUILT FOR THE REVIEW, BEFORE THE RUN.</span><h2>Less YAML archaeology.<br>More informed decisions.</h2></div><div class="limitations"><p><strong>A map, not a security verdict.</strong> This is an early static reviewer. It cannot resolve organization policies, evaluate conditions, inspect external actions, or expand reusable workflows. Requested permissions may differ from actual access.</p><p>For deeper checks, pair it with <a href="https://docs.zizmor.sh/" target="_blank" rel="noopener noreferrer">zizmor</a> and <a href="https://github.com/rhysd/actionlint" target="_blank" rel="noopener noreferrer">actionlint</a>. <a href="https://docs.github.com/en/actions/reference/security/secure-use" target="_blank" rel="noopener noreferrer">Read GitHub’s security guidance ↗</a></p></div></section>
   </main><footer><span>Workflow Lens · Open source under MIT</span><span>Built for maintainers. No usage counters or tracking.</span><a href="https://github.com/sreyasts/workflow-lens/issues/new?template=feedback.md" target="_blank" rel="noopener noreferrer">Help shape the next release ↗</a></footer><div id="announcement" class="sr-only" role="status" aria-live="polite"></div>`;
@@ -27,13 +27,15 @@ let tab: 'map' | 'findings' = 'map';
 let timer: ReturnType<typeof setTimeout>;
 let exampleMode = true;
 let message = '';
+let sourceRevision = 0;
 
 function announce(s: string) { document.querySelector('#announcement')!.textContent = s; }
 function setSource(source: string, name: string, demo: boolean) {
-  clearTimeout(timer); editor.value = source; selectedJob = undefined; severity = 'all'; exampleMode = demo; message = '';
+  sourceRevision++; clearTimeout(timer); editor.value = source; selectedJob = undefined; severity = 'all'; exampleMode = demo; message = '';
   document.querySelector('#filename')!.textContent = name; update();
 }
 function update() {
+  document.querySelector('#export-status')!.textContent = 'Reports include workflow metadata. Review before sharing.';
   analysis = analyze(editor.value);
   if (!analysis.jobs.some(j => j.id === selectedJob)) selectedJob = undefined;
   const count = editor.value.split('\n').length;
@@ -57,7 +59,7 @@ function findingsList(items: Finding[]): string {
   return items.map(f => `<article class="finding ${f.severity}"><div class="finding-top"><span class="severity">${f.severity === 'info' ? 'NOTE' : f.severity.toUpperCase()}</span><button class="line-link" data-line="${f.line}">Line ${f.line} ↗</button></div><h3>${escape(f.title)}</h3><p>${escape(f.detail)}</p><details><summary>How to review this</summary><p>${escape(f.advice)}</p><a href="${f.source}" target="_blank" rel="noopener noreferrer">GitHub guidance ↗</a><code>${escape(f.rule)}</code></details></article>`).join('');
 }
 function render() {
-  document.querySelector<HTMLButtonElement>('#export-md')!.disabled = !!analysis.errors.length;
+  document.querySelectorAll<HTMLButtonElement>('#export-md, #copy-report, #export-mermaid').forEach(button => { button.disabled = !!analysis.errors.length; });
   if (!editor.value.trim()) { results.innerHTML = '<div class="empty"><span aria-hidden="true">⌘</span><h3>A workflow, in focus.</h3><p>Paste YAML on the left, open a file, or choose an example to see jobs and review hints.</p></div>'; return; }
   if (analysis.errors.length) { results.innerHTML = `<div class="error-box" role="alert"><h3>Let’s fix the input first.</h3>${analysis.errors.map(e => `<pre>${escape(e)}</pre>`).join('')}<p>Only single-document YAML workflows are supported. YAML aliases and custom tags are intentionally unsupported.</p></div>`; return; }
   const high = analysis.findings.filter(f => f.severity === 'high').length;
@@ -118,16 +120,28 @@ async function openFile(file?: File) {
   if (!/\.ya?ml$/i.test(file.name) || file.size > 256_000) { announce('Choose a .yml or .yaml file under 256 KB.'); message = 'Choose a .yml or .yaml file under 256 KB.'; render(); return; }
   try { setSource(await file.text(), file.name, false); } catch { message = 'Could not read this file. Try opening it again.'; render(); }
 }
-editor.addEventListener('input', () => { exampleMode = false; clearTimeout(timer); document.querySelector('#parse-status')!.textContent = 'Updating…'; document.querySelector<HTMLButtonElement>('#export-md')!.disabled = true; timer = setTimeout(update, 250); });
+editor.addEventListener('input', () => { sourceRevision++; exampleMode = false; clearTimeout(timer); document.querySelector('#parse-status')!.textContent = 'Updating…'; document.querySelectorAll<HTMLButtonElement>('#export-md, #copy-report, #export-mermaid').forEach(button => { button.disabled = true; }); timer = setTimeout(update, 250); });
 editor.addEventListener('scroll', () => { document.querySelector('#line-numbers')!.scrollTop = editor.scrollTop; });
-editor.addEventListener('keydown', event => {
-  if (event.key === 'Tab') { event.preventDefault(); const start = editor.selectionStart; const end = editor.selectionEnd; editor.setRangeText('  ', start, end, 'end'); editor.dispatchEvent(new Event('input')); }
-});
 select.onchange = () => setSource(examples[select.value as keyof typeof examples], `${select.value}.yml`, true);
 document.querySelector<HTMLButtonElement>('#open')!.onclick = () => fileInput.click();
 fileInput.onchange = () => { void openFile(fileInput.files?.[0]); fileInput.value = ''; };
 document.querySelector<HTMLButtonElement>('#clear')!.onclick = () => { setSource('', 'untitled.yml', false); editor.focus(); };
 document.querySelector<HTMLButtonElement>('#export-md')!.onclick = () => { clearTimeout(timer); update(); if (!analysis.errors.length) download(markdown(analysis), 'workflow-review.md', 'text/markdown'); };
+document.querySelector<HTMLButtonElement>('#copy-report')!.onclick = async () => {
+  clearTimeout(timer); update();
+  if (analysis.errors.length) return;
+  const revision = sourceRevision;
+  try {
+    await navigator.clipboard.writeText(markdown(analysis));
+    if (revision === sourceRevision) document.querySelector('#export-status')!.textContent = 'Copied Markdown with a job diagram. Paste into your PR.';
+  } catch {
+    if (revision === sourceRevision) document.querySelector('#export-status')!.textContent = 'Clipboard unavailable. Use Export report to save the Markdown file.';
+  }
+};
+document.querySelector<HTMLButtonElement>('#export-mermaid')!.onclick = () => {
+  clearTimeout(timer); update();
+  if (!analysis.errors.length) download(mermaid(analysis), 'workflow-diagram.mmd', 'text/plain');
+};
 const workspace = document.querySelector<HTMLElement>('.workspace')!;
 workspace.addEventListener('dragover', e => { e.preventDefault(); workspace.classList.add('dragging'); });
 workspace.addEventListener('dragleave', e => { if (!workspace.contains(e.relatedTarget as Node)) workspace.classList.remove('dragging'); });

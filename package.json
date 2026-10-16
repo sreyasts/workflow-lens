@@ -1,18 +1,48 @@
 {
   "name": "@sreyasts/workflow-lens",
   "version": "0.1.0",
-  "private": true,
-  "description": "Local visual review of GitHub Actions permissions, dependencies, and review hotspots.",
+  "description": "Local visual review and CLI inspector for GitHub Actions permissions, dependencies, and review hotspots.",
   "type": "module",
   "license": "MIT",
+  "bin": {
+    "workflow-lens": "bin/workflow-lens.js"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "src",
+    "action.yml",
+    "LICENSE",
+    "README.md"
+  ],
   "engines": {
-    "node": ">=24"
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sreyasts/workflow-lens.git"
+  },
+  "homepage": "https://sreyasts.github.io/workflow-lens/",
+  "bugs": {
+    "url": "https://github.com/sreyasts/workflow-lens/issues"
+  },
+  "keywords": [
+    "github-actions",
+    "workflow",
+    "security",
+    "mermaid",
+    "visualization",
+    "devops",
+    "static-analysis"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build --base=./",
+    "build": "tsc --noEmit && vite build --base=./ && vite build --ssr src/cli.ts --outDir dist/cli --emptyOutDir false",
     "test": "node --test tests/*.test.ts",
-    "inspect": "node src/cli.ts",
+    "inspect": "node bin/workflow-lens.js",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
