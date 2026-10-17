@@ -20,6 +20,12 @@ One public opt-in recruitment discussion was posted on 16 October 2026. It has n
 
 Do not combine these measures. Stars and repository visits are not completed reviews. A first demo is not a repeat use. Do not count the maintainer's own activity as independent evidence.
 
+## Recruitment update — 17 October 2026
+
+Three individually approved invitations were sent, approximately 101 seconds apart. No replies or delivery-failure notices were found at the next check that day. Discussion #5 still has zero comments; completed reviews, opt-ins, integrations, and voluntary repeats remain unverified at zero. The repository still has one star and zero forks. Invitation delivery and reading are unknown. Recipient identities and correspondence remain outside this public repository.
+
+The [awesome-actions listing submission](https://github.com/sdras/awesome-actions/pull/995) remains open with no reviews or comments; it is not an accepted listing or an endorsement. No additional outreach or follow-up messages have been sent. Allow 3–5 business days for replies before considering another contact; any further message requires separate approval.
+
 ## Session records
 
 No sessions recorded. For each consenting participant, use an anonymous ID (M01–M05), record only the review date, whether a real sanitized workflow review was completed, the observed outcome or confusion, and whether the participant later returned without prompting. Do not store names, private workflow files, or secret values in this log.
