@@ -16,7 +16,7 @@ Evidence of the underlying problem: [GitHub's secure-use guidance](https://docs.
 4. Fix the largest observed problem and ask whether they independently use it again on a later workflow change.
 5. Continue only if at least three voluntarily return or integrate the CLI into an actual workflow. If they prefer their current tools, change the scope or contribute upstream instead of adding features speculatively.
 
-These are experiment gates, not forecasts or OpenAI eligibility rules. A public, opt-in recruitment call was posted in [GitHub Discussions](https://github.com/sreyasts/workflow-lens/discussions/5) on 16 October 2026. No one-to-one invitations have been sent. Do not mass-message maintainers or post unsolicited security findings.
+These are experiment gates, not forecasts or OpenAI eligibility rules. A public, opt-in recruitment call was posted in [GitHub Discussions](https://github.com/sreyasts/workflow-lens/discussions/5) on 16 October 2026. Three individually approved invitations were sent on 17 October, roughly 101 seconds apart. No replies or delivery-failure notices were found at the next check that day; this does not establish delivery, reading, or use. Do not mass-message maintainers or post unsolicited security findings.
 
 ## Honest measures
 
@@ -24,11 +24,12 @@ Record consenting testers, meaningful completed reviews, repeat usage, external 
 
 ## Evidence ledger
 
-Snapshot: 16 October 2026. A discussion reply is interest only; it is not a review or user.
+Snapshot: 17 October 2026, except where an older measurement window is identified. A discussion reply is interest only; it is not a review or user.
 
 | Measure | Count | Meaning |
 | --- | ---: | --- |
 | Public opt-in recruitment posts | 1 | [Discussion #5](https://github.com/sreyasts/workflow-lens/discussions/5) |
+| Individual invitations sent | 3 | Sending is not delivery, consent, or use; contact details stay private |
 | Replies to the recruitment post | 0 | No interest expressed yet |
 | Independent maintainer opt-ins | 0 | No participants verified yet |
 | Completed review sessions | 0 | No workflow task completed with a participant |
@@ -36,7 +37,7 @@ Snapshot: 16 October 2026. A discussion reply is interest only; it is not a revi
 | External reports or integrations | 0 | None verified |
 | GitHub stars | 1 | Visibility only; stargazer independence not established |
 | GitHub forks | 0 | No downstream fork observed |
-| GitHub repository views/clones, latest 14 days | 0 / 0 | Pages traffic is not measured |
+| GitHub repository views/clones, 3–16 October | 0 / 0 | Historical snapshot; Pages traffic is not measured |
 | npm downloads | Unverified | npm's downloads endpoint returned 404 although the registry package exists; this is not a zero count |
 
 ## OpenAI program
