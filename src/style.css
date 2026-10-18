@@ -451,6 +451,15 @@ h1 {
   background: var(--bg-subtle);
   border-bottom: 1px solid var(--border-default);
 }
+.file-status {
+  margin: 0;
+  padding: 12px 16px;
+  color: var(--fg-default);
+  background: var(--warning-subtle);
+  border-bottom: 1px solid var(--border-default);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
 .workspace-label {
   font-size: 12px;
   font-weight: 600;
@@ -989,7 +998,7 @@ textarea::selection {
   padding: 2px 6px;
   border-radius: 10px;
 }
-.clean-pill {
+.no-high-pill {
   font-size: 10px;
   font-weight: 500;
   font-family: var(--font-mono);

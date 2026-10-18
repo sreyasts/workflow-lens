@@ -36,8 +36,51 @@ function strings(value: unknown, found: string[] = [], depth = 0): string[] {
   else if (obj(value)) Object.values(value).forEach(v => strings(v, found, depth + 1));
   return found;
 }
+/** Read separate expression bodies, ignoring literal values and normalizing literal property keys.
+ * This is a lexical helper, not an expression evaluator or complete syntax validator.
+ */
+function expressionCode(source: string): string[] {
+  const expressions: string[] = [];
+  let offset = 0;
+  while (offset < source.length) {
+    const start = source.indexOf('${{', offset);
+    if (start < 0) break;
+    const parts: string[] = [];
+    let i = start + 3;
+    let bracket = -1;
+    let closed = false;
+    while (i < source.length) {
+      if (source.startsWith('}}', i)) { offset = i + 2; closed = true; break; }
+      const quote = source[i];
+      if (quote === "'" || quote === '"') {
+        let end = i + 1; let literal = ''; let terminated = false;
+        while (end < source.length) {
+          if (source[end] === quote) {
+            if (source[end + 1] === quote) { literal += quote; end += 2; continue; }
+            end++; terminated = true; break;
+          }
+          literal += source[end++];
+        }
+        if (!terminated) break;
+        let before = i - 1; while (before >= 0 && /\s/.test(source[before])) before--;
+        let receiver = before - 1; while (receiver >= 0 && /\s/.test(source[receiver])) receiver--;
+        let after = end; while (after < source.length && /\s/.test(source[after])) after++;
+        if (source[before] === '[' && bracket >= 0 && /[\w\]]/.test(source[receiver] ?? '') && source[after] === ']' && /^[A-Za-z_][\w-]*$/.test(literal)) {
+          parts.length = bracket; parts.push('.', literal); i = after + 1;
+        } else { parts.push(' '); i = end; }
+        continue;
+      }
+      if (source[i] === '[') bracket = parts.length;
+      parts.push(source[i++]);
+    }
+    if (!closed) break;
+    expressions.push(parts.join(''));
+  }
+  return expressions;
+}
+
 function secretNames(value: unknown): string[] {
-  const names = strings(value).flatMap(s => Array.from(s.matchAll(/\bsecrets(?:\.([A-Za-z_][\w]*)|\[\s*['"]([^'"\]]+)['"]\s*\])/g), m => m[1] || m[2]));
+  const names = strings(value).flatMap(expressionCode).flatMap(code => Array.from(code.matchAll(/\bsecrets\s*\.\s*([A-Za-z_]\w*)/g), m => m[1].toUpperCase()));
   return [...new Set(names)];
 }
 
@@ -84,10 +127,14 @@ export function analyze(source: string): Analysis {
       if (!reusable && !Array.isArray(raw.steps)) result.errors.push(`Job ${id} must have steps or call a reusable workflow.`);
       if (!reusable && !own(raw, 'runs-on')) result.errors.push(`Job ${id} is missing runs-on.`);
       const runner = list(raw['runs-on']);
+      const runnerLabels = obj(raw['runs-on']) ? list(raw['runs-on'].labels) : runner;
+      if (own(raw, 'needs') && !(typeof raw.needs === 'string' ? raw.needs.trim().length > 0 : Array.isArray(raw.needs) && raw.needs.every(value => typeof value === 'string' && value.trim().length > 0))) {
+        result.errors.push(`Job ${id} needs must be a non-empty string or a list of non-empty strings.`);
+      }
       const effectiveEnv = { ...(obj(root.env) ? root.env : {}), ...(obj(raw.env) ? raw.env : {}) };
       const secrets = [...new Set([...secretNames(raw), ...secretNames(effectiveEnv)])];
       if (raw.secrets === 'inherit') secrets.push('(all available secrets inherited)');
-      if (strings([raw, effectiveEnv]).some(s => /\$\{\{[^}]*\bsecrets\s*\[\s*[^'"\s]/.test(s) || /\$\{\{\s*(?:toJSON\s*\(\s*)?secrets\s*(?:\)|\}\})/i.test(s))) secrets.push('(dynamic secret expression)');
+      if (strings([raw, effectiveEnv]).flatMap(expressionCode).some(code => /\bsecrets\s*\[|\b(?:toJSON\s*\(\s*)?secrets\s*(?:\)|$)/i.test(code))) secrets.push('(dynamic secret expression)');
       result.jobs.push({ id, name: text(raw.name) || id, line: line(path), needs: list(raw.needs),
         runner: runner.join(', ') || (obj(raw['runs-on']) ? JSON.stringify(raw['runs-on']) : reusable ? 'Reusable workflow' : 'Unknown'),
         permissions: perms, inheritedPermissions: !own(raw, 'permissions'), secrets,
@@ -95,7 +142,7 @@ export function analyze(source: string): Analysis {
         condition: text(raw.if) || undefined, reusable });
       if (typeof raw.needs === 'string' && raw.needs.includes('${{')) result.warnings.push(`Dynamic dependencies in ${id} are not resolved.`);
       if (raw.permissions === 'write-all') add('job-write-all', 'medium', 'Job requests write-all', `${id} requests broad write access.`, 'Grant only the scopes this job needs.', [...path, 'permissions'], id);
-      if (runner.includes('self-hosted') && result.events.some(e => /pull_request/.test(e))) add('self-hosted-pr', 'high', 'PR-triggered job uses a self-hosted runner', 'Contributor code may persist on a runner. Actual exposure depends on repository visibility, approvals, and runner isolation.', 'Use an isolated ephemeral runner and review which contributors can trigger it.', [...path, 'runs-on'], id);
+      if (runnerLabels.some(label => label.toLowerCase() === 'self-hosted') && result.events.some(e => /pull_request/.test(e))) add('self-hosted-pr', 'high', 'PR-triggered job uses a self-hosted runner', 'Contributor code may persist on a runner. Actual exposure depends on repository visibility, approvals, and runner isolation.', 'Use an isolated ephemeral runner and review which contributors can trigger it.', [...path, 'runs-on'], id);
       if (raw.secrets === 'inherit') add('inherit-secrets', 'medium', 'Reusable workflow inherits secrets', 'The called workflow can receive all secrets available to this call.', 'Pass only explicitly required named secrets; inspect the called workflow.', [...path, 'secrets'], id);
       const jobContainer = typeof raw.container === 'string' ? raw.container : obj(raw.container) ? text(raw.container.image) : '';
       if (jobContainer && !jobContainer.startsWith('./') && !/@sha256:[a-f\d]{64}$/i.test(jobContainer) && !/@[a-f\d]{40}$/i.test(jobContainer)) {
@@ -112,7 +159,7 @@ export function analyze(source: string): Analysis {
         const uses = text(step.uses); const run = text(step.run); const withObj = obj(step.with) ? step.with : {};
         if (uses && !uses.startsWith('./') && !selfRepositoryRef(uses) && !uses.startsWith('docker://') && !/@[a-f\d]{40}$/i.test(uses)) add('unpinned-action', 'info', 'Action uses a mutable reference', uses, 'Review the action and pin a full commit SHA, or use an appropriate verified dependency lockfile.', [...stepPath, 'uses'], id, index);
         if (uses.startsWith('docker://') && !/@sha256:[a-f\d]{64}$/i.test(uses)) add('unpinned-container', 'info', 'Container reference is mutable', uses, 'Use a reviewed image digest.', [...stepPath, 'uses'], id, index);
-        const untrustedContext = /\$\{\{[\s\S]*?(?:github\.(?:event\.(?:pull_request\.(?:title|body|head\.(?:ref|label))|workflow_run\.(?:head_branch|display_title|head_commit\.message)|issue\.(?:title|body)|(?:review_)?comment\.body|discussion\.(?:title|body)|review\.body|head_commit\.(?:message|author\.(?:name|email)))|head_ref|ref_name|ref)|(?:github\.event\.)?inputs(?:\.[\w.-]+|\[\s*['"][^'"]+['"]\s*\]))[\s\S]*?\}\}/.test(run);
+        const untrustedContext = expressionCode(run).some(code => /\b(?:github\.(?:event\.(?:pull_request\.(?:title|body|head\.(?:ref|label))|workflow_run\.(?:head_branch|display_title|head_commit\.message)|issue\.(?:title|body)|(?:review_)?comment\.body|discussion\.(?:title|body)|review\.body|head_commit\.(?:message|author\.(?:name|email)))|head_ref|ref_name|ref)|(?:github\.event\.)?inputs\.[\w.-]+)\b/.test(code));
         if (untrustedContext) add('script-injection', 'high', 'Untrusted context is interpolated into a script', 'PR, issue, branch, or comment text is inserted into the generated shell script. This is a review heuristic; expression parsing is not complete.', 'Pass the value through an environment variable and quote it using your shell conventions. Avoid eval.', [...stepPath, 'run'], id, index);
         const checkout = /^actions\/checkout@/i.test(uses);
         const untrustedRef = strings(withObj).some(s => /github\.event\.(pull_request\.head|workflow_run\.head)|refs\/pull\//.test(s));

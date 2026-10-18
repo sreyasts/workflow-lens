@@ -1,6 +1,6 @@
 # Maintainer Adoption and Outreach Playbook
 
-The [OpenAI Codex for Open Source program](https://developers.openai.com/community/codex-for-oss) offers six months of ChatGPT Pro with Codex to selected maintainers. API credits are separate and conditional. The public criteria name maintainer role, project use, and ecosystem importance; they publish no minimum star or traffic count. Admission is discretionary, so do not present any metric here as an eligibility threshold.
+The objective is to help maintainers review real workflow changes. Prioritize accurate explanations, useful reports and voluntary repeat use over visibility metrics.
 
 These are unsent drafts and an experiment plan, not proof of usage. Repo stars, page visits, completed reviews, and voluntary repeat use must be counted separately.
 

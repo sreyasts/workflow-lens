@@ -40,11 +40,11 @@ Snapshot: 17 October 2026, except where an older measurement window is identifie
 | GitHub repository views/clones, 3–16 October | 0 / 0 | Historical snapshot; Pages traffic is not measured |
 | npm downloads | Unverified | npm's downloads endpoint returned 404 although the registry package exists; this is not a zero count |
 
-## OpenAI program
+## Maintainer evidence
 
-The [official program](https://developers.openai.com/community/codex-for-oss) advertises six months of ChatGPT Pro including Codex, plus conditional Security access and possible API credits. The official page publishes no numerical star threshold. Selection considers maintainer and ecosystem evidence and is discretionary under the [program terms](https://learn.chatgpt.com/docs/codex-for-oss-terms). The maintainer's current plan is to defer applying until the project has independent completed reviews, voluntary repeat use, and broader adoption evidence; this is a project decision, not an OpenAI eligibility rule.
+Use completed workflow reviews and voluntary repeat use to decide what to improve. Repository visibility and release activity alone do not establish that the tool helps maintainers.
 
-Build because the tool is useful even without a grant. After at least three of five pilot maintainers voluntarily return or integrate it, broaden recruitment and record real downstream use before applying. Request API credits only if maintainers adopt a concrete Codex-powered PR-review, automation, or release workflow. Never label test activity, self-authored issues, or synthetic examples as real community adoption.
+After at least three of five pilot maintainers voluntarily return or integrate it, broaden recruitment and record real downstream use. This is a project decision gate. Never label test activity, self-authored issues, or synthetic examples as real community adoption.
 
 ## What would change the direction
 

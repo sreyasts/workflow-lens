@@ -17,7 +17,7 @@ Paste or open a workflow to see its job dependencies, requested token permission
 ## What it does
 
 - Draws the dependency map for a single YAML workflow; select a job for access details.
-- Shows job permission overrides, unknown repository defaults, and named secret references.
+- Shows job permission overrides, unknown repository defaults, and secret references inside expressions. Literal text is excluded; named secrets follow GitHub's [case-insensitive naming rules](https://docs.github.com/en/actions/reference/security/secrets). Dynamic references stay unresolved.
 - Flags review patterns including privileged PR checkout, direct untrusted script interpolation, broad permissions, mutable action references, and inherited secrets.
 - Links findings back to source lines and GitHub's guidance.
 - Copies a PR-ready Markdown report with a Mermaid dependency diagram; exports Markdown, JSON, and standalone Mermaid. The CLI uses the same analyzer as the app.
@@ -90,6 +90,8 @@ It does not evaluate `if` conditions, expand matrices or reusable workflows, fet
 Single-document YAML 1.2 only. Aliases and custom tags are rejected. Limits: 256 KB, 100 jobs, 1,000 steps, and 40 nested levels. Syntax errors, missing job dependencies, and cycles are surfaced before displaying a map. This is not complete GitHub Actions schema validation.
 
 Pair with [zizmor](https://docs.zizmor.sh/) for deeper workflow security analysis and [actionlint](https://github.com/rhysd/actionlint) for workflow validation. Rule rationale follows [GitHub's secure-use reference](https://docs.github.com/en/actions/reference/security/secure-use).
+
+Expression inspection is lexical: it separates expression bodies and quoted values, including literal bracket property names, but does not evaluate conditions, function results or dynamic property keys. A card labeled **No high hints** means no matching high-priority rule, and **OIDC requested** describes `id-token: write`, not repository-token write access.
 
 ## Contributing
 
