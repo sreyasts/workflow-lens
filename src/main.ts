@@ -122,6 +122,7 @@ root.innerHTML = `
           <button id="clear" class="btn btn-ghost subtle">${ICON_CLEAR} Clear</button>
         </div>
       </div>
+      <p id="file-status" class="file-status" role="status" hidden></p>
       <div class="panels">
         <section class="editor-panel" aria-labelledby="editor-heading">
           <div class="panel-heading">
@@ -185,13 +186,17 @@ let severity: Severity | 'all' = 'all';
 let tab: 'map' | 'findings' = 'map';
 let timer: ReturnType<typeof setTimeout>;
 let exampleMode = true;
-let message = '';
 let sourceRevision = 0;
 
 function announce(s: string) { document.querySelector('#announcement')!.textContent = s; }
 
+function fileStatus(message: string) {
+  const status = document.querySelector<HTMLElement>('#file-status')!;
+  status.textContent = message; status.hidden = !message;
+}
+
 function setSource(source: string, name: string, demo: boolean) {
-  sourceRevision++; clearTimeout(timer); editor.value = source; selectedJob = undefined; severity = 'all'; exampleMode = demo; message = '';
+  sourceRevision++; clearTimeout(timer); editor.value = source; selectedJob = undefined; severity = 'all'; exampleMode = demo; fileStatus('');
   document.querySelector('#filename')!.textContent = name; update();
 }
 
@@ -203,14 +208,17 @@ function update() {
   document.querySelector('#line-numbers')!.textContent = Array.from({ length: count }, (_, i) => i + 1).join('\n');
   document.querySelector('#line-count')!.textContent = `${count} lines`;
   const parseStatus = document.querySelector('#parse-status')!;
-  if (analysis.errors.length) {
+  if (!editor.value.trim()) {
+    parseStatus.textContent = 'Ready';
+    parseStatus.className = 'status-pill';
+  } else if (analysis.errors.length) {
     parseStatus.textContent = 'Syntax error';
     parseStatus.className = 'status-pill status-error';
   } else {
     parseStatus.textContent = 'Parsed locally';
     parseStatus.className = 'status-pill status-ready';
   }
-  render(); announce(analysis.errors.length ? analysis.errors[0] : `${analysis.jobs.length} jobs. ${analysis.findings.filter(f => f.severity === 'high').length} high priority hints.`);
+  render(); announce(!editor.value.trim() ? 'No workflow loaded.' : analysis.errors.length ? analysis.errors[0] : `${analysis.jobs.length} jobs. ${analysis.findings.filter(f => f.severity === 'high').length} high priority hints.`);
 }
 
 function permissionLabel(p: Record<string, string>): string {
@@ -255,6 +263,15 @@ function findingsList(items: Finding[]): string {
 }
 
 function render() {
+  const focused = document.activeElement;
+  let focusSelector: string | undefined;
+  if (focused instanceof HTMLElement && results.contains(focused)) {
+    if (focused.id) focusSelector = `#${CSS.escape(focused.id)}`;
+    else {
+      const attribute = ['data-job', 'data-tab', 'data-severity'].find(name => focused.hasAttribute(name));
+      if (attribute) focusSelector = `[${attribute}="${CSS.escape(focused.getAttribute(attribute)!)}"]`;
+    }
+  }
   document.querySelectorAll<HTMLButtonElement>('#export-md, #copy-report, #export-mermaid').forEach(button => { button.disabled = !analysis.jobs.length || !!analysis.errors.length; });
   if (!editor.value.trim()) {
     results.innerHTML = `<div class="empty">${ICON_LOGO}<h3>No workflow loaded</h3><p>Paste YAML on the left, open a local file, or choose a preset example to visualize jobs and review hints.</p></div>`;
@@ -280,7 +297,6 @@ function render() {
 
   results.innerHTML = `
     ${exampleMode ? `<div class="demo-notice">${ICON_ALERT_INFO} <span>Preset Workflow</span> — Replace with your own workflow to review your repository.</div>` : ''}
-    ${message ? `<div class="demo-notice">${ICON_ALERT_INFO} <span>${escape(message)}</span></div>` : ''}
     <div class="summary">
       <div class="summary-info">
         <span class="small-label">WORKFLOW OVERVIEW</span>
@@ -338,18 +354,22 @@ function render() {
               <div class="graph-level">
                 ${analysis.jobs.filter(j => ranks.get(j.id) === level).map(j => {
                   const hits = analysis.findings.filter(f => f.job === j.id && f.severity === 'high').length;
+                  const repositoryWrite = Object.entries(j.permissions).some(([scope, access]) => scope !== 'id-token' && access === 'write');
+                  const oidc = j.permissions['id-token'] === 'write';
+                  const unknown = Object.values(j.permissions).includes('unknown');
+                  const accessLabel = repositoryWrite ? 'Write requested' : unknown ? 'Scopes unknown' : oidc ? 'OIDC requested' : Object.keys(j.permissions).length ? 'Read requested' : 'No token scopes';
                   return `
                     <button class="job-card ${selectedJob === j.id ? 'selected' : ''}" data-job="${escape(j.id)}" aria-pressed="${selectedJob === j.id}">
                       <div class="job-card-top">
                         <span class="job-icon" aria-hidden="true">${j.reusable ? ICON_REUSABLE : ICON_JOB}</span>
-                        <span>${hits ? `<span class="risk-pill">${hits} high</span>` : '<span class="clean-pill">Clean</span>'}</span>
+                        <span>${hits ? `<span class="risk-pill">${hits} high</span>` : '<span class="no-high-pill">No high hints</span>'}</span>
                       </div>
                       <strong>${escape(j.name)}</strong>
                       <code>${escape(j.id)}</code>
                       <p class="runner-info">${escape(j.runner)}</p>
                       <div class="access">
-                        <span class="${Object.values(j.permissions).includes('write') ? 'access-write' : Object.values(j.permissions).includes('unknown') ? 'access-unknown' : 'access-read'}">
-                          ${Object.values(j.permissions).includes('write') ? 'Write access' : Object.values(j.permissions).includes('unknown') ? 'Access unknown' : 'Limited access'}
+                        <span class="${repositoryWrite || oidc ? 'access-write' : unknown ? 'access-unknown' : 'access-read'}">
+                          ${accessLabel}
                         </span>
                         <span>${j.secrets.length} secret ref${j.secrets.length === 1 ? '' : 's'}</span>
                       </div>
@@ -376,7 +396,7 @@ function render() {
               <button data-line="${chosen.line}" class="line-link">Line ${chosen.line} ${ICON_EXTERNAL}</button>
             </div>
             <dl>
-              <dt>Requested token</dt>
+              <dt>Requested permissions</dt>
               <dd class="code-val">${escape(permissionLabel(chosen.permissions))}</dd>
               <dt>Permission source</dt>
               <dd>${chosen.inheritedPermissions ? '<span class="badge-subtle">Inherited from workflow / repository defaults</span>' : '<span class="badge-subtle">Explicit job override</span>'}</dd>
@@ -415,6 +435,7 @@ function render() {
   const all = results.querySelector<HTMLButtonElement>('#all-jobs'); if (all) all.onclick = () => { selectedJob = undefined; render(); };
   const reset = results.querySelector<HTMLButtonElement>('#reset-filters'); if (reset) reset.onclick = () => { selectedJob = undefined; severity = 'all'; render(); };
   results.querySelector<HTMLButtonElement>('#export-json')!.onclick = () => { clearTimeout(timer); update(); if (!analysis.errors.length) download(JSON.stringify(analysis, null, 2), 'workflow-review.json', 'application/json'); };
+  if (focusSelector) results.querySelector<HTMLElement>(focusSelector)?.focus({ preventScroll: true });
   requestAnimationFrame(drawEdges);
 }
 
@@ -455,11 +476,18 @@ function download(content: string, name: string, mime: string) {
 
 async function openFile(file?: File) {
   if (!file) return;
-  if (!/\.ya?ml$/i.test(file.name) || file.size > 256_000) { announce('Choose a .yml or .yaml file under 256 KB.'); message = 'Choose a .yml or .yaml file under 256 KB.'; render(); return; }
-  try { setSource(await file.text(), file.name, false); } catch { message = 'Could not read this file. Try opening it again.'; render(); }
+  const revision = ++sourceRevision;
+  if (!/\.ya?ml$/i.test(file.name) || file.size > 256_000) { fileStatus('Choose a .yml or .yaml file under 256 KB.'); return; }
+  fileStatus('Reading local workflow…');
+  try {
+    const source = await file.text();
+    if (revision === sourceRevision) setSource(source, file.name, false);
+  } catch {
+    if (revision === sourceRevision) fileStatus('Could not read this file. Try opening it again.');
+  }
 }
 
-editor.addEventListener('input', () => { sourceRevision++; exampleMode = false; clearTimeout(timer); document.querySelector('#parse-status')!.textContent = 'Updating…'; document.querySelectorAll<HTMLButtonElement>('#export-md, #copy-report, #export-mermaid').forEach(button => { button.disabled = true; }); timer = setTimeout(update, 250); });
+editor.addEventListener('input', () => { sourceRevision++; fileStatus(''); exampleMode = false; clearTimeout(timer); document.querySelector('#parse-status')!.textContent = 'Updating…'; document.querySelectorAll<HTMLButtonElement>('#export-md, #copy-report, #export-mermaid').forEach(button => { button.disabled = true; }); timer = setTimeout(update, 250); });
 editor.addEventListener('scroll', () => { document.querySelector('#line-numbers')!.scrollTop = editor.scrollTop; });
 select.onchange = () => setSource(examples[select.value as keyof typeof examples], `${select.value}.yml`, true);
 document.querySelector<HTMLButtonElement>('#open')!.onclick = () => fileInput.click();

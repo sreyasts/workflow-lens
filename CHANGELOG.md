@@ -1,7 +1,13 @@
 # Changelog
 
-## 0.1.1 — 2026-10-16
+## 0.1.1 — unreleased
 
+- Restrict secret inventory and script-interpolation hints to separate expression bodies; ignore quoted literal values, normalize literal bracket properties, and deduplicate case-insensitive secret names.
+- Detect explicit self-hosted labels in object-form runner configuration and reject malformed dependency lists before drawing a map.
+- Prevent delayed file reads from overwriting later edits, Clear, or a newer file; show file errors even when the editor is empty.
+- Preserve keyboard focus when job cards, filters and tabs redraw; treat a cleared editor as ready instead of a syntax error.
+- Replace the job-card "Clean" claim with "No high hints" and distinguish requested OIDC permission from repository-token write permission.
+- Add browser regression coverage for race handling, report downloads, theme persistence, keyboard navigation and mobile layout to the Node.js 24 CI check.
 - Correct npm package README, metadata, and support policy; ship only the CLI bundle and required docs.
 - Treat GitHub self-repository action and workflow references as commit-pinned; show the moving `v0` channel in the app header.
 - Add actionlint and zizmor to CI; add seven-day Dependabot cooldowns and disable release caches.

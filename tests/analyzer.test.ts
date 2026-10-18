@@ -293,3 +293,63 @@ test('remote script execution detects sudo flags and python piping', () => {
   const pythonScript = analyze(workflow('    steps:\n      - run: wget -qO- https://example.invalid/run.py | python3'));
   assert.ok(pythonScript.findings.some(f => f.rule === 'remote-script'));
 });
+
+test('secret inventory ignores plain text and expression string literals', () => {
+  const r = analyze(workflow(`    steps:
+      - run: |
+          echo secrets.NOT_A_REFERENCE
+          echo "\${{ format('secrets.ALSO_NOT_REAL ''quoted'' }}', secrets['REAL_TOKEN']) }}"
+          echo "\${{ 'toJSON(secrets)' }}"
+`));
+  assert.deepEqual(r.errors, []);
+  assert.deepEqual(r.jobs[0].secrets, ['REAL_TOKEN']);
+});
+
+test('named and dynamic secret expressions remain visible across expression boundaries', () => {
+  const r = analyze(workflow(`    env:
+      ONE: \${{ secrets.token }}
+      TWO: \${{ secrets['TOKEN'] }}
+      THREE: \${{ secrets[vars.SECRET_NAME] }}
+      FOUR: \${{ toJSON(secrets) }}
+    steps: []`));
+  assert.deepEqual(r.jobs[0].secrets, ['TOKEN', '(dynamic secret expression)']);
+});
+
+test('script hints do not join separate expressions or inspect quoted literal values', () => {
+  const cases = [
+    'echo "${{ github.sha }} github.event.issue.title ${{ github.run_id }}"',
+    'echo "${{ format(\'github.head_ref\', github.sha) }}"',
+    'echo "${{ \'github.event.issue.body\' }}"',
+  ];
+  for (const run of cases) {
+    const r = analyze(workflow(`    steps:\n      - run: |\n          ${run}`));
+    assert.deepEqual(r.errors, []);
+    assert.ok(!r.findings.some(f => f.rule === 'script-injection'), run);
+  }
+});
+
+test('literal bracket property references still identify untrusted script data', () => {
+  const r = analyze(workflow(`    steps:
+      - run: echo "\${{ github['event']['pull_request']['title'] }}"`));
+  assert.ok(r.findings.some(f => f.rule === 'script-injection'));
+});
+
+test('object-form self-hosted runner labels receive the PR review hint', () => {
+  for (const labels of ['self-hosted', '[SELF-HOSTED, linux]']) {
+    const r = analyze(`on: pull_request\njobs:\n  test:\n    runs-on:\n      group: review-runners\n      labels: ${labels}\n    steps: []`);
+    assert.deepEqual(r.errors, []);
+    assert.ok(r.findings.some(f => f.rule === 'self-hosted-pr'), labels);
+  }
+});
+
+test('malformed needs entries fail instead of disappearing from the dependency map', () => {
+  for (const needs of ['[build, 42]', 'true', '{build: true}', '""', '[build, null]']) {
+    const source = `on: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps: []\n  deploy:\n    runs-on: ubuntu-latest\n    needs: ${needs}\n    steps: []`;
+    const r = analyze(source);
+    assert.match(r.errors.join('\n'), /needs.*non-empty.*string/i, needs);
+    assert.throws(() => mermaid(r), /Fix workflow errors/);
+    const cli = spawnSync(process.execPath, ['src/cli.ts', '-', '--mermaid'], { input: source, encoding: 'utf8' });
+    assert.equal(cli.status, 2, needs);
+    assert.equal(cli.stdout, '');
+  }
+});

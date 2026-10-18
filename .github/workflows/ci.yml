@@ -44,6 +44,12 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Install browser for interaction checks
+        if: matrix.node-version == 24
+        run: npx playwright install --with-deps chromium
+      - name: Verify browser interactions
+        if: matrix.node-version == 24
+        run: npm run test:e2e
       - name: Dogfood Workflow Lens CLI
         run: npm run inspect -- .github/workflows/ci.yml --fail-on-high
       - name: Verify npm package contents
