@@ -95,6 +95,8 @@ Expression inspection is lexical: it separates expression bodies and quoted valu
 
 ## Contributing
 
+The [privileged-checkout evaluation](docs/EVALUATION.md) records 20 synthetic positive/negative cases, a reproducible before/after comparison and its limits. Run `npm run evaluate` from a source checkout; this is a rule regression evaluation, not an independent security benchmark.
+
 Useful first contributions: sanitized workflows that the tool explains incorrectly, precise false-positive reports, keyboard accessibility improvements, and fixtures for documented rules. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 MIT licensed. No adoption or star-count claims are made. This project is independently maintained and is not affiliated with GitHub or OpenAI.

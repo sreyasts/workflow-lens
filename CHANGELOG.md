@@ -2,6 +2,8 @@
 
 ## 0.1.1 — unreleased
 
+- Limit privileged checkout hints to repository/ref selectors; inspect actual expressions, including literal bracket properties and head_ref, while ignoring context-like literals and destination paths.
+- Add a reproducible 20-case privileged-checkout evaluation with per-case labels, source hashes, confusion matrices, historical comparison and CI checks.
 - Restrict secret inventory and script-interpolation hints to separate expression bodies; ignore quoted literal values, normalize literal bracket properties, and deduplicate case-insensitive secret names.
 - Detect explicit self-hosted labels in object-form runner configuration and reject malformed dependency lists before drawing a map.
 - Prevent delayed file reads from overwriting later edits, Clear, or a newer file; show file errors even when the editor is empty.

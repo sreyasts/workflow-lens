@@ -43,6 +43,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build --base=./ && vite build --ssr src/cli.ts --outDir dist/cli --emptyOutDir false",
     "test": "node --test tests/*.test.ts",
+    "evaluate": "node scripts/evaluate.ts",
+    "evaluate:compare": "node scripts/compare-evaluation.ts",
     "test:e2e": "playwright test",
     "inspect": "node bin/workflow-lens.js",
     "preview": "vite preview --host 127.0.0.1"

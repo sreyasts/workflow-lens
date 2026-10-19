@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "rule": "privileged-checkout",
+  "fixtureSha256": "9ce581995123845164431b2a4b624f52c4e2ad4cfe2597689cbf7b8304e99dee",
+  "analyzerSha256": "f7d063479853e1380f89e5a777c64112fa930cfb8c1238bf73d5162ae7088c92",
+  "hashNormalization": "CRLF line endings normalized to LF before SHA-256",
+  "scope": "Synthetic rule-presence checks; same-author labels; no workflow execution or general security accuracy claim.",
+  "summary": {
+    "cases": 20,
+    "passed": 10,
+    "inputErrors": 0,
+    "truePositives": 5,
+    "falsePositives": 5,
+    "trueNegatives": 5,
+    "falseNegatives": 5,
+    "precision": 0.5,
+    "recall": 0.5
+  },
+  "splits": {
+    "development": {
+      "cases": 12,
+      "passed": 5,
+      "inputErrors": 0,
+      "truePositives": 3,
+      "falsePositives": 4,
+      "trueNegatives": 2,
+      "falseNegatives": 3,
+      "precision": 0.42857142857142855,
+      "recall": 0.5
+    },
+    "confirmation": {
+      "cases": 8,
+      "passed": 5,
+      "inputErrors": 0,
+      "truePositives": 2,
+      "falsePositives": 1,
+      "trueNegatives": 3,
+      "falseNegatives": 2,
+      "precision": 0.6666666666666666,
+      "recall": 0.5
+    }
+  },
+  "cases": [
+    {
+      "id": "dev-pr-dot",
+      "split": "development",
+      "expected": true,
+      "actual": true,
+      "errors": [],
+      "passed": true,
+      "reason": "The checkout selects the contributor's PR head commit in a privileged event."
+    },
+    {
+      "id": "dev-pr-bracket",
+      "split": "development",
+      "expected": true,
+      "actual": false,
+      "errors": [],
+      "passed": false,
+      "reason": "Literal index syntax selects the same PR head commit as dot syntax."
+    },
+    {
+      "id": "dev-head-ref",
+      "split": "development",
+      "expected": true,
+      "actual": false,
+      "errors": [],
+      "passed": false,
+      "reason": "head_ref is the contributor's source branch; selecting it crosses the checkout trust boundary."
+    },
+    {
+      "id": "dev-run-sha",
+      "split": "development",
+      "expected": true,
+      "actual": true,
+      "errors": [],
+      "passed": true,
+      "reason": "A workflow_run checkout of the triggering run's commit requires a trust review."
+    },
+    {
+      "id": "dev-fork-repository",
+      "split": "development",
+      "expected": true,
+      "actual": false,
+      "errors": [],
+      "passed": false,
+      "reason": "Selecting the PR author's repository can check out fork code even without an explicit ref."
+    },
+    {
+      "id": "dev-pull-ref",
+      "split": "development",
+      "expected": true,
+      "actual": true,
+      "errors": [],
+      "passed": true,
+      "reason": "The explicit Git ref selects a PR head rather than a base branch."
+    },
+    {
+      "id": "dev-default",
+      "split": "development",
+      "expected": false,
+      "actual": false,
+      "errors": [],
+      "passed": true,
+      "reason": "No PR/run-head selection appears; the privileged-trigger hint is separate."
+    },
+    {
+      "id": "dev-base-sha",
+      "split": "development",
+      "expected": false,
+      "actual": false,
+      "errors": [],
+      "passed": true,
+      "reason": "The base commit is not the contributor head targeted by this rule."
+    },
+    {
+      "id": "dev-path-context",
+      "split": "development",
+      "expected": false,
+      "actual": true,
+      "errors": [],
+      "passed": false,
+      "reason": "A destination directory does not select a checkout repository or revision."
+    },
+    {
+      "id": "dev-path-pull",
+      "split": "development",
+      "expected": false,
+      "actual": true,
+      "errors": [],
+      "passed": false,
+      "reason": "A directory containing a PR-ref substring does not select PR code."
+    },
+    {
+      "id": "dev-plain-context",
+      "split": "development",
+      "expected": false,
+      "actual": true,
+      "errors": [],
+      "passed": false,
+      "reason": "Outside an expression this is a literal ref name, not an event property lookup."
+    },
+    {
+      "id": "dev-literal-expression",
+      "split": "development",
+      "expected": false,
+      "actual": true,
+      "errors": [],
+      "passed": false,
+      "reason": "The expression returns a constant string rather than a PR field."
+    },
+    {
+      "id": "confirm-mixed-index",
+      "split": "confirmation",
+      "expected": true,
+      "actual": false,
+      "errors": [],
+      "passed": false,
+      "reason": "Mixed index and dot syntax still selects a contributor branch."
+    },
+    {
+      "id": "confirm-run-branch",
+      "split": "confirmation",
+      "expected": true,
+      "actual": false,
+      "errors": [],
+      "passed": false,
+      "reason": "Index syntax selects the branch from the triggering workflow run."
+    },
+    {
+      "id": "confirm-format-head",
+      "split": "confirmation",
+      "expected": true,
+      "actual": true,
+      "errors": [],
+      "passed": true,
+      "reason": "Wrapping an actual PR head property in format does not remove its provenance."
+    },
+    {
+      "id": "confirm-merge-ref",
+      "split": "confirmation",
+      "expected": true,
+      "actual": true,
+      "errors": [],
+      "passed": true,
+      "reason": "A PR merge ref also includes contributor code and requires review."
+    },
+    {
+      "id": "confirm-unprivileged",
+      "split": "confirmation",
+      "expected": false,
+      "actual": false,
+      "errors": [],
+      "passed": true,
+      "reason": "This rule specifically concerns privileged triggers; no finding is not a general safety claim."
+    },
+    {
+      "id": "confirm-other-action",
+      "split": "confirmation",
+      "expected": false,
+      "actual": false,
+      "errors": [],
+      "passed": true,
+      "reason": "External actions are not expanded and this is not actions/checkout."
+    },
+    {
+      "id": "confirm-base-index",
+      "split": "confirmation",
+      "expected": false,
+      "actual": false,
+      "errors": [],
+      "passed": true,
+      "reason": "Both selectors refer to the base repository, not the contributor's head."
+    },
+    {
+      "id": "confirm-format-literal",
+      "split": "confirmation",
+      "expected": false,
+      "actual": true,
+      "errors": [],
+      "passed": false,
+      "reason": "Context-looking text in format string literals does not read the PR object."
+    }
+  ]
+}
