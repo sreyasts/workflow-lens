@@ -24,7 +24,7 @@ Record consenting testers, meaningful completed reviews, repeat usage, external 
 
 ## Evidence ledger
 
-Snapshot: 17 October 2026, except where an older measurement window is identified. A discussion reply is interest only; it is not a review or user.
+Pilot measures are the 17 October 2026 snapshot; GitHub stars and npm downloads were checked again on 19 October. Other historical windows are identified below. A discussion reply is interest only; it is not a review or user.
 
 | Measure | Count | Meaning |
 | --- | ---: | --- |
@@ -35,10 +35,12 @@ Snapshot: 17 October 2026, except where an older measurement window is identifie
 | Completed review sessions | 0 | No workflow task completed with a participant |
 | Voluntary repeat reviews | 0 | No later use observed or reported |
 | External reports or integrations | 0 | None verified |
-| GitHub stars | 1 | Visibility only; stargazer independence not established |
+| GitHub stars, checked 19 October | 1 | The sole [stargazer](https://api.github.com/repos/sreyasts/workflow-lens/stargazers) is the maintainer, `sreyasts`; 0 verified independent stars |
 | GitHub forks | 0 | No downstream fork observed |
 | GitHub repository views/clones, 3–16 October | 0 / 0 | Historical snapshot; Pages traffic is not measured |
-| npm downloads | Unverified | npm's downloads endpoint returned 404 although the registry package exists; this is not a zero count |
+| npm downloads, 19 September–18 October | 175 | [Official npm API](https://api.npmjs.org/downloads/point/last-month/@sreyasts/workflow-lens), checked 19 October; [archived response](evidence/2026-10-19-npm-downloads.json) |
+
+The earlier 16–17 October checks returned HTTP 404; that historical result did not establish zero downloads. The successful 19 October response counts download events, not unique users. Maintainer, CI, and bot activity may be included; independent downloads and repeat use cannot be determined from this total. No independent adoption is verified by this snapshot.
 
 ## Maintainer evidence
 
