@@ -2,6 +2,8 @@
 
 ## 0.1.1 — unreleased
 
+- Add GitHub Actions job summaries so workflow review reports remain visible outside the raw step log, including reviews that fail on high-priority hints.
+- Recognize equivalent untrusted-context expressions with whitespace around property access and avoid credential-persistence hints for explicit string false inputs.
 - Limit privileged checkout hints to repository/ref selectors; inspect actual expressions, including literal bracket properties and head_ref, while ignoring context-like literals and destination paths.
 - Add a reproducible 20-case privileged-checkout evaluation with per-case labels, source hashes, confusion matrices, historical comparison and CI checks.
 - Restrict secret inventory and script-interpolation hints to separate expression bodies; ignore quoted literal values, normalize literal bracket properties, and deduplicate case-insensitive secret names.

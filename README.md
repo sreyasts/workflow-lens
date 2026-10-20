@@ -77,6 +77,8 @@ Run Workflow Lens directly in your GitHub Actions workflows:
 
 The `v0` tag follows the latest stable action release and can move. For production workflows, pin the action to a verified full commit SHA.
 
+The **unreleased 0.1.1 candidate** also appends a Markdown review to the GitHub job summary by default, using the same analysis as the step log. The `format` input still controls log output. High-hint and parse-error reports remain visible before exit codes 1 and 2; a summary write failure only warns. Set `summary: 'false'` to keep workflow metadata out of the summary; log output remains available. **The current `v0`/`v0.1.0` release does not include this option**; use a verified source commit containing the change until a new release is published.
+
 ## Supported versions
 
 Only the latest stable versioned release is supported. The npm CLI package requires Node.js 22.18.0 or later; CI currently checks Node.js 22.18.0 and 24. Older releases receive no maintenance guarantee. See the [release policy](https://github.com/sreyasts/workflow-lens/blob/main/docs/RELEASE.md).
