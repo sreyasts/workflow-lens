@@ -18,6 +18,10 @@ inputs:
     description: 'Exit with code 1 if high-severity review hints are detected'
     required: false
     default: 'false'
+  summary:
+    description: 'Add a Markdown review report to the GitHub job summary; disable for sensitive workflow metadata'
+    required: false
+    default: 'true'
 
 runs:
   using: 'composite'
@@ -28,7 +32,12 @@ runs:
         WORKFLOW_LENS_WORKFLOW: ${{ inputs.workflow }}
         WORKFLOW_LENS_FORMAT: ${{ inputs.format }}
         WORKFLOW_LENS_FAIL_ON_HIGH: ${{ inputs.fail-on-high }}
+        WORKFLOW_LENS_SUMMARY: ${{ inputs.summary }}
       run: |
+        case "$WORKFLOW_LENS_SUMMARY" in
+          true|false) ;;
+          *) echo "Workflow Lens summary must be true or false." >&2; exit 2 ;;
+        esac
         workflow_path="$(node -e '
           const { realpathSync, statSync } = require("node:fs");
           const { isAbsolute, relative, resolve, sep } = require("node:path");
@@ -54,4 +63,4 @@ runs:
         if [ "$WORKFLOW_LENS_FAIL_ON_HIGH" = "true" ]; then
           args+=(--fail-on-high)
         fi
-        node "$GITHUB_ACTION_PATH/bin/workflow-lens.js" "${args[@]}"
+        node "$GITHUB_ACTION_PATH/scripts/action-report.ts" "${args[@]}"

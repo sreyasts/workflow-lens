@@ -43,9 +43,21 @@ test('GitHub self-repository actions and workflows are treated as commit-pinned'
   assert.ok(!action.findings.some(f => f.rule === 'unpinned-action'));
   assert.ok(!reusable.findings.some(f => f.rule === 'unpinned-workflow'));
 });
-test('quoted false does not silently disable credential persistence', () => {
-  const r = analyze(workflow('    steps:\n      - uses: actions/checkout@v4\n        with:\n          persist-credentials: "false"'));
-  assert.ok(r.findings.some(f => f.rule === 'persist-credentials'));
+test('checkout accepts explicit boolean and string false credential inputs', () => {
+  for (const value of ['false', '"false"', "'FALSE'", "' false '"]) {
+    const r = analyze(workflow(`    steps:\n      - uses: actions/checkout@v4\n        with:\n          persist-credentials: ${value}`));
+    assert.deepEqual(r.errors, []);
+    assert.ok(!r.findings.some(f => f.rule === 'persist-credentials'), value);
+  }
+});
+
+test('checkout keeps the review hint for absent, enabled or unresolved credential inputs', () => {
+  for (const value of [undefined, 'true', '"true"', "'TRUE'", "'unknown'", '${{ inputs.persist }}']) {
+    const input = value === undefined ? '' : `\n        with:\n          persist-credentials: ${value}`;
+    const r = analyze(workflow(`    steps:\n      - uses: actions/checkout@v4${input}`));
+    assert.deepEqual(r.errors, []);
+    assert.ok(r.findings.some(f => f.rule === 'persist-credentials'), String(value));
+  }
 });
 test('passing untrusted text through an environment variable avoids direct interpolation hint', () => {
   const r = analyze(workflow('    steps:\n      - env:\n          TITLE: ${{ github.event.pull_request.title }}\n        run: printf "%s" "$TITLE"'));
@@ -320,6 +332,9 @@ test('script hints do not join separate expressions or inspect quoted literal va
     'echo "${{ github.sha }} github.event.issue.title ${{ github.run_id }}"',
     'echo "${{ format(\'github.head_ref\', github.sha) }}"',
     'echo "${{ \'github.event.issue.body\' }}"',
+    'echo "${{ \'github . event . issue . body\' }}"',
+    'echo "${{ format(\'github[\'\'event\'\'] [\'\'issue\'\'] [\'\'title\'\']\', github . sha) }}"',
+    'echo "${{ github . sha }} github . event . issue . title ${{ github . run_id }}"',
   ];
   for (const run of cases) {
     const r = analyze(workflow(`    steps:\n      - run: |\n          ${run}`));
@@ -332,6 +347,25 @@ test('literal bracket property references still identify untrusted script data',
   const r = analyze(workflow(`    steps:
       - run: echo "\${{ github['event']['pull_request']['title'] }}"`));
   assert.ok(r.findings.some(f => f.rule === 'script-injection'));
+});
+
+test('whitespace around dot and literal index access does not hide untrusted script data', () => {
+  for (const expression of [
+    'github . event . issue . title',
+    "github['event'] ['issue'] ['title']",
+    "github [ 'event' ] . issue [ 'title' ]",
+    "github . event ['pull_request'] . title",
+    "format('{0}', github . event . issue . title)",
+    'inputs . message',
+  ]) {
+    const source = workflow(`    steps:\n      - run: echo "\${{ ${expression} }}"`);
+    const r = analyze(source);
+    assert.deepEqual(r.errors, []);
+    const finding = r.findings.find(f => f.rule === 'script-injection');
+    assert.ok(finding, expression);
+    assert.equal(finding.severity, 'high');
+    assert.match(source.split('\n')[finding.line - 1], /run: echo/);
+  }
 });
 
 test('object-form self-hosted runner labels receive the PR review hint', () => {

@@ -74,7 +74,8 @@ function expressionCode(source: string): string[] {
       parts.push(source[i++]);
     }
     if (!closed) break;
-    expressions.push(parts.join(''));
+    // GitHub tokenizes property access independently of whitespace between tokens.
+    expressions.push(parts.join('').replace(/\s*\.\s*/g, '.'));
   }
   return expressions;
 }
@@ -168,7 +169,8 @@ export function analyze(source: string): Analysis {
           /refs\/pull\//.test(selector) || expressionCode(selector).some(code =>
             /\bgithub\s*\.\s*(?:head_ref\b|event\s*\.\s*(?:pull_request\s*\.\s*head\b|workflow_run\s*\.\s*head_(?:sha|branch|repository)\b))/.test(code)));
         if (privileged && checkout && untrustedRef) add('privileged-checkout', 'high', 'Privileged workflow checks out a PR or run head', 'Untrusted code is placed in a privileged job workspace; later execution can expose credentials or caches. Checkout versions may add protections.', 'Avoid checking out untrusted heads in this context. Separate unprivileged tests from privileged operations.', [...stepPath, 'with'], id, index);
-        if (checkout && withObj['persist-credentials'] !== false) add('persist-credentials', 'info', 'Checkout keeps credentials available', 'Checkout is not explicitly configured with persist-credentials: false. Other steps may be able to use its credentials.', 'Set persist-credentials: false when later Git operations do not need authentication.', stepPath, id, index);
+        const credentialsDisabled = withObj['persist-credentials'] === false || text(withObj['persist-credentials']).trim().toLowerCase() === 'false';
+        if (checkout && !credentialsDisabled) add('persist-credentials', 'info', 'Checkout keeps credentials available', 'Checkout is not explicitly configured with persist-credentials: false. Other steps may be able to use its credentials.', 'Set persist-credentials: false when later Git operations do not need authentication.', stepPath, id, index);
         if (/\b(?:curl|wget)\b[^\n]*\|\s*(?:sudo\b[^\n|]*?\s+)?(?:bash|sh|zsh|dash|python\d?|perl|ruby)\b/i.test(run)) add('remote-script', 'medium', 'Downloaded content is piped to a shell', 'Remote content can execute immediately without a separate integrity check.', 'Download a fixed version, verify its integrity, and inspect before execution.', [...stepPath, 'run'], id, index);
       });
     }
