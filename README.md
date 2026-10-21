@@ -6,17 +6,35 @@
 [![GitHub Action](https://img.shields.io/badge/GitHub_Action-v0_alias-blue?logo=githubactions)](https://github.com/sreyasts/workflow-lens/blob/main/action.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Turn GitHub Actions YAML into a dependency map and a PR review report.**
+**Review which GitHub Actions job gained access, what it depends on, and what to inspect next.**
 
-[Open the app](https://sreyasts.github.io/workflow-lens/) · [Report a problem](https://github.com/sreyasts/workflow-lens/issues/new?template=feedback.md) · [Contribute](CONTRIBUTING.md)
+[Try a before/after review](https://sreyasts.github.io/workflow-lens/?example=compare) · [Read the example report](docs/examples/permission-change/report.md) · [Report a problem](https://github.com/sreyasts/workflow-lens/issues/new?template=feedback.md)
 
 Paste or open a workflow to see its job dependencies, requested token permissions, secret references, and review hints. Processing happens on your device. No sign-in, uploads, external fonts, analytics, or AI API calls.
 
-![Workflow Lens showing a local workflow and its dependency map](https://raw.githubusercontent.com/sreyasts/workflow-lens/main/docs/screenshot.jpg)
+## See the result before installing
+
+You are reviewing a workflow change. The `report` job used to request no token scopes; the proposed version requests write scopes. Workflow Lens connects that change to the job and its dependencies:
+
+| Review question | What this example shows |
+| --- | --- |
+| Which job changed? | `report`, with an explicit job permission override |
+| What access does it request now? | `contents: write` and `id-token: write` (OIDC) |
+| What must run first? | `test`, through `needs: test` |
+| What should I check next? | Whether every step in `report` needs these scopes, and whether event restrictions and repository policy allow them |
+
+![Synthetic example: a before/after permission comparison followed by the selected report job and its dependency map](docs/change-review.gif)
+
+**Synthetic example, not an independent review.** Inspect the [before YAML](docs/examples/permission-change/before.yml), [proposed YAML](docs/examples/permission-change/after.yml), and [actual generated Markdown report](docs/examples/permission-change/report.md) entirely on GitHub. The [walkthrough](docs/REVIEW-WALKTHROUGH.md) explains how to reproduce it and what it misses.
+
+For a real repository input, inspect [this project's own CI report](docs/examples/self-review/report.md) alongside its [pinned workflow source](https://github.com/sreyasts/workflow-lens/blob/06527a022baa6684ef868dc32883b1cd7250b09b/.github/workflows/ci.yml). This is maintainer self-use, not independent adoption.
+
+Use this when a visual access/dependency overview or a shareable report helps your review. For a small change, your normal diff may already be clearer. This compares selected fields, not full workflow behavior; keep reviewing scripts and the ordinary diff.
 
 ## What it does
 
 - Draws the dependency map for a single YAML workflow; select a job for access details.
+- Compares a baseline and proposed workflow in the browser, highlighting selected field changes and newly matching review hints.
 - Shows job permission overrides, unknown repository defaults, and secret references inside expressions. Literal text is excluded; named secrets follow GitHub's [case-insensitive naming rules](https://docs.github.com/en/actions/reference/security/secrets). Dynamic references stay unresolved.
 - Flags review patterns including privileged PR checkout, direct untrusted script interpolation, broad permissions, mutable action references, and inherited secrets.
 - Links findings back to source lines and GitHub's guidance.
@@ -24,15 +42,24 @@ Paste or open a workflow to see its job dependencies, requested token permission
 
 ## Try a review in one minute
 
-New here? [Try the synthetic before/after example](https://sreyasts.github.io/workflow-lens/?example=compare): identify which job gained requested write scopes, then decide whether to try your own workflow. The example is not an external review or a security benchmark. Opening your own proposed file clears the example baseline; a baseline you explicitly open or capture is retained.
+New here? [Open the before/after example](https://sreyasts.github.io/workflow-lens/?example=compare), find the changed permission row, then select `report` in the job map. No installation required.
 
-1. [Open the app](https://sreyasts.github.io/workflow-lens/) and explore the bundled PR trust-boundary example. No installation required.
-2. Select a job to inspect requested permissions and secret references. Follow a hint's line link back to the YAML.
-3. Open your own `.yml` file, then choose **Copy PR report**. Review the metadata before pasting into a GitHub PR or issue; GitHub renders the embedded Mermaid diagram.
+1. Open the **old version of your workflow** and choose **Use current as baseline**.
+2. Open the **proposed version** with **Open .yml**. Inspect the comparison, select a job, and follow a hint's line link to the YAML.
+3. Choose **Copy PR Report** or **Export .md**. Review the metadata before sharing; GitHub renders the report's Mermaid diagram.
 
-Use **Mermaid diagram** for a standalone map, or **Export report** if clipboard access is unavailable. Exports always include the whole workflow, regardless of view filters.
+Alternatively, use **Open baseline .yml** to select the old version directly. Opening your own proposed file clears the synthetic example baseline; a baseline you explicitly choose is retained. Use **Mermaid Diagram** for a standalone proposed-workflow map. Exports include the whole analysis, regardless of view filters.
 
 **Help test this on real reviews:** we are seeking five maintainers who review GitHub Actions changes. [Join the pilot](https://github.com/sreyasts/workflow-lens/discussions/5), or [share a completed review experience](https://github.com/sreyasts/workflow-lens/issues/new?template=review-experience.md). Tell us what helped or confused you; no star or endorsement is requested.
+
+## Which version should I use?
+
+| Entry point | Available now |
+| --- | --- |
+| [Browser app](https://sreyasts.github.io/workflow-lens/?example=compare) | Before/after comparison, visual map, review hints and exports; no installation |
+| Published npm `0.1.0` | Single-workflow inspection; **no `--compare`** |
+| GitHub Action `v0` / `v0.1.0` | Released single-workflow action; **no new job-summary option** |
+| Current source (`0.1.1` candidate) | CLI comparison and job summaries; build from source as shown below; unreleased |
 
 ## Choose the right tool
 
