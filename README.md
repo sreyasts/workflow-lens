@@ -8,7 +8,7 @@
 
 **Review which GitHub Actions job gained requested permissions, what it depends on, and what to inspect next.**
 
-[Try a before/after review](https://sreyasts.github.io/workflow-lens/?example=compare) · [Read the example report](docs/examples/permission-change/report.md) · [Report a problem](https://github.com/sreyasts/workflow-lens/issues/new?template=feedback.md)
+[Try a before/after review](https://sreyasts.github.io/workflow-lens/?example=compare) · [Read real permission changes](docs/PERMISSION-CHANGE-EVALUATION.md) · [Report a problem](https://github.com/sreyasts/workflow-lens/issues/new?template=feedback.md)
 
 Paste or open a workflow to see its job dependencies, requested token permissions, secret references, and review hints. Processing happens on your device. No sign-in, uploads, external fonts, analytics, or AI API calls.
 
