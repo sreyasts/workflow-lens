@@ -9,11 +9,12 @@ export interface Job {
   id: string; name: string; line: number; needs: string[]; runner: string;
   permissions: Record<string, string>; inheritedPermissions: boolean;
   secrets: string[]; actions: string[]; steps: number; condition?: string;
-  reusable: boolean;
+  reusable: boolean; workflowRef?: string;
 }
 export interface Analysis {
   name: string; events: string[]; jobs: Job[]; findings: Finding[];
   errors: string[]; warnings: string[]; sourceLines: number;
+  workflowPermissions?: Record<string, string>;
 }
 type Obj = Record<string, unknown>;
 const obj = (x: unknown): x is Obj => typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -106,6 +107,7 @@ export function analyze(source: string): Analysis {
     const totalSteps = Object.values(root.jobs).reduce<number>((n, j) => n + (obj(j) && Array.isArray(j.steps) ? j.steps.length : 0), 0);
     if (totalSteps > 1000) { result.errors.push('This reviewer supports up to 1,000 steps per workflow.'); return result; }
     result.name = text(root.name) || result.name;
+    result.workflowPermissions = permissions(root.permissions);
     result.events = obj(root.on) ? Object.keys(root.on) : list(root.on);
     const line = (path: (string | number)[]): number => {
       const node = doc.getIn(path, true);
@@ -140,7 +142,8 @@ export function analyze(source: string): Analysis {
         runner: runner.join(', ') || (obj(raw['runs-on']) ? JSON.stringify(raw['runs-on']) : reusable ? 'Reusable workflow' : 'Unknown'),
         permissions: perms, inheritedPermissions: !own(raw, 'permissions'), secrets,
         actions: steps.filter(obj).map(s => text(s.uses)).filter(Boolean), steps: steps.length,
-        condition: text(raw.if) || undefined, reusable });
+        condition: typeof raw.if === 'boolean' ? String(raw.if) : text(raw.if) || undefined, reusable,
+        ...(reusable ? { workflowRef: text(raw.uses) } : {}) });
       if (typeof raw.needs === 'string' && raw.needs.includes('${{')) result.warnings.push(`Dynamic dependencies in ${id} are not resolved.`);
       if (raw.permissions === 'write-all') add('job-write-all', 'medium', 'Job requests write-all', `${id} requests broad write access.`, 'Grant only the scopes this job needs.', [...path, 'permissions'], id);
       if (runnerLabels.some(label => label.toLowerCase() === 'self-hosted') && result.events.some(e => /pull_request/.test(e))) add('self-hosted-pr', 'high', 'PR-triggered job uses a self-hosted runner', 'Contributor code may persist on a runner. Actual exposure depends on repository visibility, approvals, and runner isolation.', 'Use an isolated ephemeral runner and review which contributors can trigger it.', [...path, 'runs-on'], id);

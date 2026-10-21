@@ -62,6 +62,23 @@ workflow-lens .github/workflows/ci.yml
 
 Use `-` instead of a filename to read from stdin (e.g., `cat workflow.yml | npx @sreyasts/workflow-lens -`). `--json` and `--mermaid` are mutually exclusive. Exit status is 2 for input or parsing errors, 1 for high-priority hints when `--fail-on-high` is set, and 0 otherwise.
 
+## Review a proposed workflow change
+
+The browser app supports an optional baseline: choose **Use current as baseline**, then edit or open the proposed workflow. Alternatively, **Open baseline .yml** loads the previous version. The comparison shows changes to requested permissions, secret references, events, jobs, dependencies, action references, reusable-workflow targets, runners and conditions, plus newly matching and no-longer-matching hints. Markdown and JSON exports include both versions; Mermaid exports the proposed map. Neither file is uploaded or saved across reloads.
+
+The **unreleased 0.1.1 source candidate** also supports CLI comparison; the published npm **0.1.0 does not**. From a source checkout:
+
+```sh
+npm ci
+npm run build
+node bin/workflow-lens.js proposed.yml --compare baseline.yml
+node bin/workflow-lens.js proposed.yml --compare baseline.yml --json
+```
+
+The proposed input may be `-` for stdin; the baseline must be a regular file. Comparison cannot be combined with `--mermaid`. Invalid input on either side exits 2 without classifying differences. `--fail-on-high` checks **all** high hints in the proposed workflow, including preexisting ones.
+
+This compares selected fields, not complete YAML behavior. Scripts, action inputs, trigger filters, matrices, environments, containers and other changes may be omitted. Conditions are compared as text; unknown permissions remain unknown. A disappearing hint does not prove a vulnerability was fixed, and no listed differences does not establish equivalence or safety. Continue reviewing the ordinary diff and running actionlint/zizmor.
+
 ## GitHub Action
 
 Run Workflow Lens directly in your GitHub Actions workflows:

@@ -2,6 +2,8 @@ import './style.css';
 import { analyze, markdown, mermaid } from './analyzer.ts';
 import type { Analysis, Finding, Severity } from './analyzer.ts';
 import { examples } from './examples.ts';
+import { compareWorkflows, comparisonMarkdown } from './compare.ts';
+import type { WorkflowComparison } from './compare.ts';
 
 const escape = (s: unknown): string => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
@@ -123,6 +125,17 @@ root.innerHTML = `
         </div>
       </div>
       <p id="file-status" class="file-status" role="status" hidden></p>
+      <section class="comparison-panel" aria-labelledby="comparison-heading">
+        <div class="comparison-tools">
+          <h2 id="comparison-heading">Compare a proposed change</h2>
+          <button id="baseline-current" class="btn btn-secondary">Use current as baseline</button>
+          <button id="baseline-open" class="btn btn-secondary">Open baseline .yml</button>
+          <input type="file" id="baseline-file" accept=".yml,.yaml,text/yaml,text/plain" aria-label="Baseline workflow file" hidden>
+          <button id="baseline-clear" class="btn btn-ghost" hidden>Remove baseline</button>
+        </div>
+        <p id="baseline-status" role="status">Optional: set a baseline, then edit or open the proposed workflow below. Both stay on your device.</p>
+        <div id="comparison-results" aria-live="polite"></div>
+      </section>
       <div class="panels">
         <section class="editor-panel" aria-labelledby="editor-heading">
           <div class="panel-heading">
@@ -187,6 +200,40 @@ let tab: 'map' | 'findings' = 'map';
 let timer: ReturnType<typeof setTimeout>;
 let exampleMode = true;
 let sourceRevision = 0;
+let baselineSource: string | undefined;
+let baselineName = '';
+let baselineRevision = 0;
+let baselineLoading = false;
+let comparison: WorkflowComparison | undefined;
+
+function canExport(): boolean {
+  return !baselineLoading && !analysis.errors.length && (!comparison || !comparison.before.errors.length);
+}
+
+function reviewMarkdown(): string {
+  return comparison ? `${comparisonMarkdown(comparison)}\n\n${markdown(analysis)}` : markdown(analysis);
+}
+
+function renderComparison() {
+  const output = document.querySelector<HTMLDivElement>('#comparison-results')!;
+  document.querySelector<HTMLButtonElement>('#baseline-clear')!.hidden = baselineSource === undefined;
+  if (!comparison) { output.innerHTML = ''; return; }
+  if (comparison.before.errors.length || comparison.after.errors.length) {
+    output.innerHTML = `<div class="error-box" role="alert"><h3>Comparison unavailable</h3>${[
+      ...comparison.before.errors.map(error => `Baseline: ${error}`),
+      ...comparison.after.errors.map(error => `Proposed: ${error}`),
+    ].map(error => `<p>${escape(error)}</p>`).join('')}<p>Fix both workflows before comparing or exporting a review.</p></div>`;
+    return;
+  }
+  output.innerHTML = `<details open><summary>Changes compared with baseline (${comparison.changes.length})</summary>
+    <p>${comparison.addedFindings.length} introduced hints · ${comparison.removedFindings.length} no longer matched. These are heuristic matches, not a safety verdict.</p>
+    ${comparison.changes.length ? `<div class="comparison-table"><table><caption>Compared fields in baseline and proposed workflows</caption><thead><tr><th scope="col">Field</th><th scope="col">Baseline</th><th scope="col">Proposed</th></tr></thead><tbody>${comparison.changes.map(change => `<tr><th scope="row">${escape(change.job ? `${change.job}: ${change.field}` : change.field)}</th><td>${change.before.map(escape).join('<br>') || '—'}</td><td>${change.after.map(escape).join('<br>') || '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p>No changes in compared fields. Other YAML content may have changed.</p>'}
+    ${comparison.addedFindings.length ? `<h3>Introduced review hints</h3>${findingsList(comparison.addedFindings)}` : ''}
+    ${comparison.warnings.map(warning => `<p class="comparison-limit">${escape(warning)}</p>`).join('')}
+    <p>Markdown and JSON include this comparison. Mermaid exports only the proposed workflow.</p>
+    </details>`;
+  output.querySelectorAll<HTMLButtonElement>('[data-line]').forEach(button => button.onclick = () => focusLine(Number(button.dataset.line)));
+}
 
 function announce(s: string) { document.querySelector('#announcement')!.textContent = s; }
 
@@ -203,6 +250,8 @@ function setSource(source: string, name: string, demo: boolean) {
 function update() {
   document.querySelector('#export-status')!.textContent = 'Reports include workflow metadata. Review before sharing.';
   analysis = analyze(editor.value);
+  comparison = baselineSource === undefined ? undefined : compareWorkflows(baselineSource, editor.value);
+  renderComparison();
   if (!analysis.jobs.some(j => j.id === selectedJob)) selectedJob = undefined;
   const count = editor.value.split('\n').length;
   document.querySelector('#line-numbers')!.textContent = Array.from({ length: count }, (_, i) => i + 1).join('\n');
@@ -272,7 +321,7 @@ function render() {
       if (attribute) focusSelector = `[${attribute}="${CSS.escape(focused.getAttribute(attribute)!)}"]`;
     }
   }
-  document.querySelectorAll<HTMLButtonElement>('#export-md, #copy-report, #export-mermaid').forEach(button => { button.disabled = !analysis.jobs.length || !!analysis.errors.length; });
+  document.querySelectorAll<HTMLButtonElement>('#export-md, #copy-report, #export-mermaid').forEach(button => { button.disabled = !analysis.jobs.length || !canExport(); });
   if (!editor.value.trim()) {
     results.innerHTML = `<div class="empty">${ICON_LOGO}<h3>No workflow loaded</h3><p>Paste YAML on the left, open a local file, or choose a preset example to visualize jobs and review hints.</p></div>`;
     return;
@@ -434,7 +483,9 @@ function render() {
   results.querySelectorAll<HTMLButtonElement>('[data-line]').forEach(el => el.onclick = () => focusLine(Number(el.dataset.line)));
   const all = results.querySelector<HTMLButtonElement>('#all-jobs'); if (all) all.onclick = () => { selectedJob = undefined; render(); };
   const reset = results.querySelector<HTMLButtonElement>('#reset-filters'); if (reset) reset.onclick = () => { selectedJob = undefined; severity = 'all'; render(); };
-  results.querySelector<HTMLButtonElement>('#export-json')!.onclick = () => { clearTimeout(timer); update(); if (!analysis.errors.length) download(JSON.stringify(analysis, null, 2), 'workflow-review.json', 'application/json'); };
+  const jsonExport = results.querySelector<HTMLButtonElement>('#export-json')!;
+  jsonExport.disabled = !canExport();
+  jsonExport.onclick = () => { clearTimeout(timer); update(); if (canExport()) download(JSON.stringify(comparison ?? analysis, null, 2), 'workflow-review.json', 'application/json'); };
   if (focusSelector) results.querySelector<HTMLElement>(focusSelector)?.focus({ preventScroll: true });
   requestAnimationFrame(drawEdges);
 }
@@ -493,21 +544,64 @@ select.onchange = () => setSource(examples[select.value as keyof typeof examples
 document.querySelector<HTMLButtonElement>('#open')!.onclick = () => fileInput.click();
 fileInput.onchange = () => { void openFile(fileInput.files?.[0]); fileInput.value = ''; };
 document.querySelector<HTMLButtonElement>('#clear')!.onclick = () => { setSource('', 'untitled.yml', false); editor.focus(); };
-document.querySelector<HTMLButtonElement>('#export-md')!.onclick = () => { clearTimeout(timer); update(); if (!analysis.errors.length) download(markdown(analysis), 'workflow-review.md', 'text/markdown'); };
+document.querySelector<HTMLButtonElement>('#export-md')!.onclick = () => { clearTimeout(timer); update(); if (canExport()) download(reviewMarkdown(), 'workflow-review.md', 'text/markdown'); };
 document.querySelector<HTMLButtonElement>('#copy-report')!.onclick = async () => {
   clearTimeout(timer); update();
-  if (analysis.errors.length) return;
+  if (!canExport()) return;
   const revision = sourceRevision;
+  const baselineAtCopy = baselineRevision;
   try {
-    await navigator.clipboard.writeText(markdown(analysis));
-    if (revision === sourceRevision) document.querySelector('#export-status')!.textContent = 'Copied Markdown with a job diagram. Paste into your PR.';
+    await navigator.clipboard.writeText(reviewMarkdown());
+    if (revision === sourceRevision && baselineAtCopy === baselineRevision) document.querySelector('#export-status')!.textContent = 'Copied Markdown with a job diagram. Paste into your PR.';
   } catch {
-    if (revision === sourceRevision) document.querySelector('#export-status')!.textContent = 'Clipboard unavailable. Use Export report to save the Markdown file.';
+    if (revision === sourceRevision && baselineAtCopy === baselineRevision) document.querySelector('#export-status')!.textContent = 'Clipboard unavailable. Use Export report to save the Markdown file.';
   }
 };
 document.querySelector<HTMLButtonElement>('#export-mermaid')!.onclick = () => {
   clearTimeout(timer); update();
-  if (!analysis.errors.length) download(mermaid(analysis), 'workflow-diagram.mmd', 'text/plain');
+  if (canExport()) download(mermaid(analysis), 'workflow-diagram.mmd', 'text/plain');
+};
+const baselineInput = document.querySelector<HTMLInputElement>('#baseline-file')!;
+const baselineStatus = document.querySelector<HTMLElement>('#baseline-status')!;
+document.querySelector<HTMLButtonElement>('#baseline-open')!.onclick = () => baselineInput.click();
+document.querySelector<HTMLButtonElement>('#baseline-current')!.onclick = () => {
+  baselineRevision++; baselineLoading = false; clearTimeout(timer);
+  baselineSource = editor.value;
+  baselineName = document.querySelector('#filename')!.textContent || 'current workflow';
+  baselineStatus.textContent = `Baseline: ${baselineName}. Edit or open the proposed workflow below.`;
+  update();
+};
+document.querySelector<HTMLButtonElement>('#baseline-clear')!.onclick = () => {
+  baselineRevision++; baselineLoading = false; baselineSource = undefined; baselineName = '';
+  baselineStatus.textContent = 'Baseline removed. Showing a single-workflow review.';
+  clearTimeout(timer); update();
+  document.querySelector<HTMLButtonElement>('#baseline-current')!.focus();
+};
+baselineInput.onchange = () => {
+  const file = baselineInput.files?.[0]; baselineInput.value = '';
+  if (!file) return;
+  const revision = ++baselineRevision;
+  baselineLoading = false;
+  if (!/\.ya?ml$/i.test(file.name) || file.size > 256_000) {
+    baselineStatus.textContent = 'Choose a .yml or .yaml baseline under 256 KB. Existing baseline unchanged.';
+    clearTimeout(timer); update();
+    return;
+  }
+  baselineLoading = true;
+  baselineStatus.textContent = 'Reading local baseline…';
+  clearTimeout(timer); update();
+  void file.text().then(source => {
+    if (revision !== baselineRevision) return;
+    baselineLoading = false; baselineSource = source; baselineName = file.name;
+    baselineStatus.textContent = `Baseline: ${baselineName}. Edit or open the proposed workflow below.`;
+    clearTimeout(timer); update();
+  }).catch(() => {
+    if (revision === baselineRevision) {
+      baselineLoading = false;
+      baselineStatus.textContent = 'Could not read the baseline. Existing baseline unchanged.';
+      clearTimeout(timer); update();
+    }
+  });
 };
 const workspace = document.querySelector<HTMLElement>('.workspace')!;
 workspace.addEventListener('dragover', e => { e.preventDefault(); workspace.classList.add('dragging'); });
