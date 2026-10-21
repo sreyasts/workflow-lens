@@ -1,0 +1,15 @@
+name: Minimal CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Run project checks here"
+  report:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - run: echo "Checks complete"
