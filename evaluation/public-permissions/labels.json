@@ -1,0 +1,53 @@
+[
+  {
+    "id": "uv-release",
+    "judgment": "Known requested-scope gain",
+    "reason": "publish-docs inherited an explicit empty workflow map; it now requests contents: read and id-token: write. OIDC is not repository write access.",
+    "knownGain": true,
+    "workflowPermissionChange": false,
+    "jobs": [{ "id": "publish-docs", "before": ["inherited workflow default", "no token scopes requested"], "after": ["job override", "contents: read", "id-token: write"] }]
+  },
+  {
+    "id": "uv-docs",
+    "judgment": "Known requested-scope gain",
+    "reason": "mkdocs inherited an explicit empty workflow map; it now requests contents: read and id-token: write. The external STS token requested in action inputs is outside this comparison.",
+    "knownGain": true,
+    "workflowPermissionChange": false,
+    "jobs": [{ "id": "mkdocs", "before": ["inherited workflow default", "no token scopes requested"], "after": ["job override", "contents: read", "id-token: write"] }]
+  },
+  {
+    "id": "hf-same-scopes",
+    "judgment": "Same scopes; different permission source",
+    "reason": "version_and_release requests the same three write scopes before and after. Moving an inherited map to a job override is not a scope gain for this job.",
+    "knownGain": false,
+    "workflowPermissionChange": true,
+    "jobs": [{ "id": "version_and_release", "before": ["inherited workflow default", "contents: write", "id-token: write", "packages: write"], "after": ["job override", "contents: write", "id-token: write", "packages: write"] }]
+  },
+  {
+    "id": "hf-oidc-removed",
+    "judgment": "Requested OIDC scope removed",
+    "reason": "version_and_release retains contents: write and packages: write, but no longer requests id-token: write. The job still requests repository-token write access.",
+    "knownGain": false,
+    "workflowPermissionChange": true,
+    "jobs": [{ "id": "version_and_release", "before": ["inherited workflow default", "contents: write", "id-token: write", "packages: write"], "after": ["job override", "contents: write", "packages: write"] }]
+  },
+  {
+    "id": "ostro-explicit",
+    "judgment": "Unknown baseline becomes explicit",
+    "reason": "The old workflow omits permissions, so its repository defaults are unknown. The new job map explicitly requests contents: read and id-token: write; a net gain over the old run cannot be established here.",
+    "knownGain": false,
+    "workflowPermissionChange": false,
+    "jobs": [{ "id": "publish-npm", "before": ["inherited workflow default", "*: unknown"], "after": ["job override", "contents: read", "id-token: write"] }]
+  },
+  {
+    "id": "cli-deny-default",
+    "judgment": "Unknown baseline becomes explicit empty map",
+    "reason": "The new workflow-level permissions: {} applies to both jobs. No scope is gained; how much access was removed cannot be established from unknown repository defaults.",
+    "knownGain": false,
+    "workflowPermissionChange": true,
+    "jobs": [
+      { "id": "issue", "before": ["inherited workflow default", "*: unknown"], "after": ["inherited workflow default", "no token scopes requested"] },
+      { "id": "pull_request", "before": ["inherited workflow default", "*: unknown"], "after": ["inherited workflow default", "no token scopes requested"] }
+    ]
+  }
+]

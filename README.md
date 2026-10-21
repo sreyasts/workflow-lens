@@ -6,9 +6,9 @@
 [![GitHub Action](https://img.shields.io/badge/GitHub_Action-v0_alias-blue?logo=githubactions)](https://github.com/sreyasts/workflow-lens/blob/main/action.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Review which GitHub Actions job gained access, what it depends on, and what to inspect next.**
+**Review which GitHub Actions job gained requested permissions, what it depends on, and what to inspect next.**
 
-[Try a before/after review](https://sreyasts.github.io/workflow-lens/?example=compare) · [Read the example report](docs/examples/permission-change/report.md) · [Report a problem](https://github.com/sreyasts/workflow-lens/issues/new?template=feedback.md)
+[Try a before/after review](https://sreyasts.github.io/workflow-lens/?example=compare) · [Read real permission changes](docs/PERMISSION-CHANGE-EVALUATION.md) · [Report a problem](https://github.com/sreyasts/workflow-lens/issues/new?template=feedback.md)
 
 Paste or open a workflow to see its job dependencies, requested token permissions, secret references, and review hints. Processing happens on your device. No sign-in, uploads, external fonts, analytics, or AI API calls.
 
@@ -30,6 +30,8 @@ You are reviewing a workflow change. The `report` job used to request no token s
 For a real repository input, inspect [this project's own CI report](docs/examples/self-review/report.md) alongside its [pinned workflow source](https://github.com/sreyasts/workflow-lens/blob/06527a022baa6684ef868dc32883b1cd7250b09b/.github/workflows/ci.yml). This is maintainer self-use, not independent adoption.
 
 Use this when a visual access/dependency overview or a shareable report helps your review. For a small change, your normal diff may already be clearer. This compares selected fields, not full workflow behavior; keep reviewing scripts and the ordinary diff.
+
+**Checked against real changes:** [six public workflow pairs from four PRs](docs/PERMISSION-CHANGE-EVALUATION.md), with pinned inputs, generated reports and an offline evaluator. The permission rows match the maintainer's labels in all six; two real scope gains produce zero new hints. The write-up includes inference mistakes, unknown defaults and coverage limits. This is a curated evaluation, not independent usage or general accuracy evidence.
 
 ## What it does
 
