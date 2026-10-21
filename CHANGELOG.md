@@ -2,6 +2,7 @@
 
 ## 0.1.1 — unreleased
 
+- Add a shareable synthetic comparison example and shorter candid-feedback prompt; keep example and real-workflow baselines separate.
 - Compare baseline and proposed workflows locally in the browser and CLI, including selected access/dependency changes and duplicate-aware hint differences; export Markdown and JSON with explicit comparison limits.
 - Add GitHub Actions job summaries so workflow review reports remain visible outside the raw step log, including reviews that fail on high-priority hints.
 - Recognize equivalent untrusted-context expressions with whitespace around property access and avoid credential-persistence hints for explicit string false inputs.
