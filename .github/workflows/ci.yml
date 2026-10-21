@@ -44,6 +44,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run evaluate
+      - run: npm run evaluate:permissions
       - run: npm run build
       - name: Install browser for interaction checks
         if: matrix.node-version == 24

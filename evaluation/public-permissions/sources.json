@@ -1,0 +1,146 @@
+[
+  {
+    "id": "uv-release",
+    "repository": "astral-sh/uv",
+    "pullRequest": 21595,
+    "title": "Publish documentation with STS credentials",
+    "source": "https://github.com/astral-sh/uv/pull/21595",
+    "mergedAt": "2026-09-18T16:16:00Z",
+    "path": ".github/workflows/release.yml",
+    "before": {
+      "commit": "17ccae34815e249c66e53abe21916c3c0b6413e5",
+      "sha256": "107b1d5af5bc7813320e4a3829c008b1b1556a8264db14876a7b58b11243e5e0",
+      "url": "https://github.com/astral-sh/uv/blob/17ccae34815e249c66e53abe21916c3c0b6413e5/.github/workflows/release.yml"
+    },
+    "after": {
+      "commit": "45e83d539bbb7b7599d3a46832e97402d2b23219",
+      "sha256": "8fafd1fcc59a761ed2711938c8805348ef87605196eff7998903caf227343506",
+      "url": "https://github.com/astral-sh/uv/blob/45e83d539bbb7b7599d3a46832e97402d2b23219/.github/workflows/release.yml"
+    },
+    "license": {
+      "file": "licenses/astral-sh--uv.txt",
+      "source": "https://github.com/astral-sh/uv/blob/45e83d539bbb7b7599d3a46832e97402d2b23219/LICENSE-MIT",
+      "sha256": "860e3d7a86b84e6a7012c7a635fc64df475cebc6cce34dfeb73a5982ec58176c"
+    }
+  },
+  {
+    "id": "uv-docs",
+    "repository": "astral-sh/uv",
+    "pullRequest": 21595,
+    "title": "Publish documentation with STS credentials",
+    "source": "https://github.com/astral-sh/uv/pull/21595",
+    "mergedAt": "2026-09-18T16:16:00Z",
+    "path": ".github/workflows/publish-docs.yml",
+    "before": {
+      "commit": "17ccae34815e249c66e53abe21916c3c0b6413e5",
+      "sha256": "cd29625d93052d4632539e360bb1158678a45c5959558f7e5cc8d5eb9c7f5f58",
+      "url": "https://github.com/astral-sh/uv/blob/17ccae34815e249c66e53abe21916c3c0b6413e5/.github/workflows/publish-docs.yml"
+    },
+    "after": {
+      "commit": "45e83d539bbb7b7599d3a46832e97402d2b23219",
+      "sha256": "e31a050d409fda8f55b9189ed5b0616ddb6b1b84fe9f2125890c692422029d1a",
+      "url": "https://github.com/astral-sh/uv/blob/45e83d539bbb7b7599d3a46832e97402d2b23219/.github/workflows/publish-docs.yml"
+    },
+    "license": {
+      "file": "licenses/astral-sh--uv.txt",
+      "source": "https://github.com/astral-sh/uv/blob/45e83d539bbb7b7599d3a46832e97402d2b23219/LICENSE-MIT",
+      "sha256": "860e3d7a86b84e6a7012c7a635fc64df475cebc6cce34dfeb73a5982ec58176c"
+    }
+  },
+  {
+    "id": "hf-same-scopes",
+    "repository": "huggingface/huggingface.js",
+    "pullRequest": 2523,
+    "title": "Scope GITHUB_TOKEN permissions per job",
+    "source": "https://github.com/huggingface/huggingface.js/pull/2523",
+    "mergedAt": "2026-09-23T12:39:33Z",
+    "path": ".github/workflows/agents-publish.yml",
+    "before": {
+      "commit": "013bb34c8d94d7213d81fcdbde58a8b6163f4ed3",
+      "sha256": "20ec657580704b1ac3dcbe4d0bcf5503367b38404c641ef8a845c43f0f2498fd",
+      "url": "https://github.com/huggingface/huggingface.js/blob/013bb34c8d94d7213d81fcdbde58a8b6163f4ed3/.github/workflows/agents-publish.yml"
+    },
+    "after": {
+      "commit": "baa9949bd2308daf6536e5b8b85bb28a4e32a5c0",
+      "sha256": "50b772517aa512db8155caacd2255c401a746d56ccb52cf8b783a9d12b80eb61",
+      "url": "https://github.com/huggingface/huggingface.js/blob/baa9949bd2308daf6536e5b8b85bb28a4e32a5c0/.github/workflows/agents-publish.yml"
+    },
+    "license": {
+      "file": "licenses/huggingface--huggingface.js.txt",
+      "source": "https://github.com/huggingface/huggingface.js/blob/baa9949bd2308daf6536e5b8b85bb28a4e32a5c0/LICENSE",
+      "sha256": "d6e7b19451c1b3d1d66353bb4b1274138953b3bfd9ae60c56e77b1f548796982"
+    }
+  },
+  {
+    "id": "hf-oidc-removed",
+    "repository": "huggingface/huggingface.js",
+    "pullRequest": 2523,
+    "title": "Scope GITHUB_TOKEN permissions per job",
+    "source": "https://github.com/huggingface/huggingface.js/pull/2523",
+    "mergedAt": "2026-09-23T12:39:33Z",
+    "path": ".github/workflows/dduf-publish.yml",
+    "before": {
+      "commit": "013bb34c8d94d7213d81fcdbde58a8b6163f4ed3",
+      "sha256": "6490eef5da0eb644bba46bb1d7af10c331cab396895a270d159b9f0435960f4f",
+      "url": "https://github.com/huggingface/huggingface.js/blob/013bb34c8d94d7213d81fcdbde58a8b6163f4ed3/.github/workflows/dduf-publish.yml"
+    },
+    "after": {
+      "commit": "baa9949bd2308daf6536e5b8b85bb28a4e32a5c0",
+      "sha256": "3de1236590dda2c72efb42ccc39bac8042dc15e55ac25adfd6ff8c3aa8b2e3a1",
+      "url": "https://github.com/huggingface/huggingface.js/blob/baa9949bd2308daf6536e5b8b85bb28a4e32a5c0/.github/workflows/dduf-publish.yml"
+    },
+    "license": {
+      "file": "licenses/huggingface--huggingface.js.txt",
+      "source": "https://github.com/huggingface/huggingface.js/blob/baa9949bd2308daf6536e5b8b85bb28a4e32a5c0/LICENSE",
+      "sha256": "d6e7b19451c1b3d1d66353bb4b1274138953b3bfd9ae60c56e77b1f548796982"
+    }
+  },
+  {
+    "id": "ostro-explicit",
+    "repository": "ostrojs/contracts",
+    "pullRequest": 22,
+    "title": "ci: add OIDC id-token permissions and provenance",
+    "source": "https://github.com/ostrojs/contracts/pull/22",
+    "mergedAt": "2026-10-21T15:48:24Z",
+    "path": ".github/workflows/npm-publish.yml",
+    "before": {
+      "commit": "8f553f7a070545b12588978f19677e11a0429ccd",
+      "sha256": "d949efb27ae133c2e8de96f6884f7170daf021233892dc11edd63ef20bc58c49",
+      "url": "https://github.com/ostrojs/contracts/blob/8f553f7a070545b12588978f19677e11a0429ccd/.github/workflows/npm-publish.yml"
+    },
+    "after": {
+      "commit": "86ee268cc3581cb6dbd50bbf92df0fc6daf8827d",
+      "sha256": "fbf7a96be8064462f1b4798992815815132981352b2ef4bf13330108a3b70226",
+      "url": "https://github.com/ostrojs/contracts/blob/86ee268cc3581cb6dbd50bbf92df0fc6daf8827d/.github/workflows/npm-publish.yml"
+    },
+    "license": {
+      "file": "licenses/ostrojs--contracts.txt",
+      "source": "https://github.com/ostrojs/contracts/blob/86ee268cc3581cb6dbd50bbf92df0fc6daf8827d/LICENSE.md",
+      "sha256": "5ebf0713826f1ac9a2e0eeb0cc5d77216e41ccbc9a0ce24e9418a8e9e2251701"
+    }
+  },
+  {
+    "id": "cli-deny-default",
+    "repository": "cli/cli",
+    "pullRequest": 11322,
+    "title": "Potential fix for code scanning alert no. 169: Workflow does not contain permissions",
+    "source": "https://github.com/cli/cli/pull/11322",
+    "mergedAt": "2025-07-17T18:08:12Z",
+    "path": ".github/workflows/triage.yml",
+    "before": {
+      "commit": "73cb3ec8a8cbfa62a4ad66e63354ac93292ecde2",
+      "sha256": "6fcb1e92ba8517578be0a21f01dee30789a2ec45bb69fb745d6e8826819d49f8",
+      "url": "https://github.com/cli/cli/blob/73cb3ec8a8cbfa62a4ad66e63354ac93292ecde2/.github/workflows/triage.yml"
+    },
+    "after": {
+      "commit": "f06c46de95f4fb77e163d36c244c125de85311d6",
+      "sha256": "b1a85bb0aa6f16f96d5507007f92bbcb8bd65f2da9cf9d7a5d61337d2dae814d",
+      "url": "https://github.com/cli/cli/blob/f06c46de95f4fb77e163d36c244c125de85311d6/.github/workflows/triage.yml"
+    },
+    "license": {
+      "file": "licenses/cli--cli.txt",
+      "source": "https://github.com/cli/cli/blob/f06c46de95f4fb77e163d36c244c125de85311d6/LICENSE",
+      "sha256": "6da4adc42392c8485e40b4251c7e332fc3352df1947c9ffade71dd60b14a7a4f"
+    }
+  }
+]

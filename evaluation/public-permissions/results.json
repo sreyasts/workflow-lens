@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "hashNormalization": "CRLF normalized to LF before SHA-256; no other source edits",
+  "scope": "Purposively selected public workflow pairs, same-maintainer labels; not independent validation, adoption, runtime-access analysis, or population accuracy.",
+  "classification": "Judgments are manual labels checked against comparison rows, not an automatic gain classifier.",
+  "analyzerSha256": "060d97d0529d24c03179260bc665e4a8e75f2b2d45739e40a4fbdc4f66ae2a8c",
+  "comparatorSha256": "a5dfcaa7cfc9c0feb264680b979bbd2b6615247407d89788173dc6f92599b8ee",
+  "sourcesSha256": "618cf1c1c9f2ae2d48312bbcc6bb0d6b86e48383c4452c98a3e412bd723189a2",
+  "labelsSha256": "3160bd61e920839b6751d7ccece286335b1c2463fecd556a953c828de8a4e9b6",
+  "summary": {
+    "workflowPairs": 6,
+    "pullRequests": 4,
+    "repositories": 4,
+    "matched": 6,
+    "knownGainPairs": 2,
+    "hintCountProxyMisses": 2
+  },
+  "cases": [
+    {
+      "id": "uv-release",
+      "source": "https://github.com/astral-sh/uv/pull/21595",
+      "judgment": "Known requested-scope gain",
+      "reasoning": "publish-docs inherited an explicit empty workflow map; it now requests contents: read and id-token: write. OIDC is not repository write access.",
+      "knownGain": true,
+      "comparisonMatchesLabels": true,
+      "errors": [],
+      "permissionChanges": [
+        {
+          "id": "publish-docs",
+          "before": [
+            "inherited workflow default",
+            "no token scopes requested"
+          ],
+          "after": [
+            "job override",
+            "contents: read",
+            "id-token: write"
+          ]
+        }
+      ],
+      "workflowPermissionChange": false,
+      "newReviewHints": 0,
+      "hintCountProxyMissesKnownGain": true,
+      "reportSha256": "2c61cb3509fa52c7ef18a7e1bc84bff77f907dcc66c278142795a144f19423ab"
+    },
+    {
+      "id": "uv-docs",
+      "source": "https://github.com/astral-sh/uv/pull/21595",
+      "judgment": "Known requested-scope gain",
+      "reasoning": "mkdocs inherited an explicit empty workflow map; it now requests contents: read and id-token: write. The external STS token requested in action inputs is outside this comparison.",
+      "knownGain": true,
+      "comparisonMatchesLabels": true,
+      "errors": [],
+      "permissionChanges": [
+        {
+          "id": "mkdocs",
+          "before": [
+            "inherited workflow default",
+            "no token scopes requested"
+          ],
+          "after": [
+            "job override",
+            "contents: read",
+            "id-token: write"
+          ]
+        }
+      ],
+      "workflowPermissionChange": false,
+      "newReviewHints": 0,
+      "hintCountProxyMissesKnownGain": true,
+      "reportSha256": "7927dd6606dc4c42eba6fc94bdc4d37f9b27a77bf11a3ae6c35207423f331c90"
+    },
+    {
+      "id": "hf-same-scopes",
+      "source": "https://github.com/huggingface/huggingface.js/pull/2523",
+      "judgment": "Same scopes; different permission source",
+      "reasoning": "version_and_release requests the same three write scopes before and after. Moving an inherited map to a job override is not a scope gain for this job.",
+      "knownGain": false,
+      "comparisonMatchesLabels": true,
+      "errors": [],
+      "permissionChanges": [
+        {
+          "id": "version_and_release",
+          "before": [
+            "inherited workflow default",
+            "contents: write",
+            "id-token: write",
+            "packages: write"
+          ],
+          "after": [
+            "job override",
+            "contents: write",
+            "id-token: write",
+            "packages: write"
+          ]
+        }
+      ],
+      "workflowPermissionChange": true,
+      "newReviewHints": 0,
+      "hintCountProxyMissesKnownGain": false,
+      "reportSha256": "277ce779abea35c8e22687093b4388b8da25880b0e8e7279fa46c84ab83569d6"
+    },
+    {
+      "id": "hf-oidc-removed",
+      "source": "https://github.com/huggingface/huggingface.js/pull/2523",
+      "judgment": "Requested OIDC scope removed",
+      "reasoning": "version_and_release retains contents: write and packages: write, but no longer requests id-token: write. The job still requests repository-token write access.",
+      "knownGain": false,
+      "comparisonMatchesLabels": true,
+      "errors": [],
+      "permissionChanges": [
+        {
+          "id": "version_and_release",
+          "before": [
+            "inherited workflow default",
+            "contents: write",
+            "id-token: write",
+            "packages: write"
+          ],
+          "after": [
+            "job override",
+            "contents: write",
+            "packages: write"
+          ]
+        }
+      ],
+      "workflowPermissionChange": true,
+      "newReviewHints": 0,
+      "hintCountProxyMissesKnownGain": false,
+      "reportSha256": "868d8b0e88351c557f29d27c9618129578a1afe62152019aab96d4d4d0ec6350"
+    },
+    {
+      "id": "ostro-explicit",
+      "source": "https://github.com/ostrojs/contracts/pull/22",
+      "judgment": "Unknown baseline becomes explicit",
+      "reasoning": "The old workflow omits permissions, so its repository defaults are unknown. The new job map explicitly requests contents: read and id-token: write; a net gain over the old run cannot be established here.",
+      "knownGain": false,
+      "comparisonMatchesLabels": true,
+      "errors": [],
+      "permissionChanges": [
+        {
+          "id": "publish-npm",
+          "before": [
+            "inherited workflow default",
+            "*: unknown"
+          ],
+          "after": [
+            "job override",
+            "contents: read",
+            "id-token: write"
+          ]
+        }
+      ],
+      "workflowPermissionChange": false,
+      "newReviewHints": 0,
+      "hintCountProxyMissesKnownGain": false,
+      "reportSha256": "23f45bb6826830cb3f88884397f8501aca063724222007ad55e3222bcdc5cb35"
+    },
+    {
+      "id": "cli-deny-default",
+      "source": "https://github.com/cli/cli/pull/11322",
+      "judgment": "Unknown baseline becomes explicit empty map",
+      "reasoning": "The new workflow-level permissions: {} applies to both jobs. No scope is gained; how much access was removed cannot be established from unknown repository defaults.",
+      "knownGain": false,
+      "comparisonMatchesLabels": true,
+      "errors": [],
+      "permissionChanges": [
+        {
+          "id": "issue",
+          "before": [
+            "inherited workflow default",
+            "*: unknown"
+          ],
+          "after": [
+            "inherited workflow default",
+            "no token scopes requested"
+          ]
+        },
+        {
+          "id": "pull_request",
+          "before": [
+            "inherited workflow default",
+            "*: unknown"
+          ],
+          "after": [
+            "inherited workflow default",
+            "no token scopes requested"
+          ]
+        }
+      ],
+      "workflowPermissionChange": true,
+      "newReviewHints": 0,
+      "hintCountProxyMissesKnownGain": false,
+      "reportSha256": "701ec2b0cb3aa3a44ef514ab160070fcf0eee9eb9630f46763134aad9e74f8ab"
+    }
+  ]
+}

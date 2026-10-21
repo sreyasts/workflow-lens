@@ -1,5 +1,7 @@
 # Privileged checkout evaluation — 19 October 2026
 
+For the separate public-workflow permission comparison, see [Which job gained requested permissions?](PERMISSION-CHANGE-EVALUATION.md). Its six real input pairs and same-maintainer labels must not be combined with the synthetic rule cases below.
+
 ## Question and scope
 
 Does `privileged-checkout` identify an explicit selection of PR/run-head code by `actions/checkout` under `pull_request_target` or `workflow_run`, without treating a destination directory or context-looking constant as such a selection?
