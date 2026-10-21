@@ -1,7 +1,7 @@
 import './style.css';
 import { analyze, markdown, mermaid } from './analyzer.ts';
 import type { Analysis, Finding, Severity } from './analyzer.ts';
-import { examples } from './examples.ts';
+import { examples, comparisonExample } from './examples.ts';
 import { compareWorkflows, comparisonMarkdown } from './compare.ts';
 import type { WorkflowComparison } from './compare.ts';
 
@@ -90,6 +90,7 @@ root.innerHTML = `
         </div>
         <h1>Review GitHub Actions Before Merging</h1>
         <p class="subtitle">See requested permissions, secret references, and job dependencies; review static hints locally in your browser.</p>
+        <a class="nav-link" href="?example=compare">Try a 30-second change review ↗</a>
       </div>
       <div class="intro-features">
         <div class="feature-item">
@@ -117,6 +118,7 @@ root.innerHTML = `
               <option value="risky">Preset: PR Trust Boundary (High Risk)</option>
               <option value="minimal">Preset: Minimal CI Pipeline</option>
               <option value="reusable">Preset: Reusable Release Workflow</option>
+              <option value="compare">Preset: Compare permissions</option>
             </select>
           </div>
           <button id="open" class="btn btn-secondary">${ICON_UPLOAD} Open .yml</button>
@@ -204,7 +206,16 @@ let baselineSource: string | undefined;
 let baselineName = '';
 let baselineRevision = 0;
 let baselineLoading = false;
+let exampleBaseline = false;
 let comparison: WorkflowComparison | undefined;
+
+function loadComparisonExample() {
+  baselineRevision++; baselineLoading = false; exampleBaseline = true;
+  baselineSource = comparisonExample.before; baselineName = 'example-before.yml';
+  document.querySelector('#baseline-status')!.textContent = 'Synthetic example, not a real repository review. Which job now requests write access? Then try two versions of your own workflow.';
+  select.value = 'compare';
+  setSource(comparisonExample.after, 'example-proposed.yml', true);
+}
 
 function canExport(): boolean {
   return !baselineLoading && !analysis.errors.length && (!comparison || !comparison.before.errors.length);
@@ -243,6 +254,10 @@ function fileStatus(message: string) {
 }
 
 function setSource(source: string, name: string, demo: boolean) {
+  if (!demo && exampleBaseline) {
+    baselineRevision++; baselineSource = undefined; baselineLoading = false; exampleBaseline = false;
+    document.querySelector('#baseline-status')!.textContent = 'Example baseline removed. Open your own baseline to compare two versions of this workflow.';
+  }
   sourceRevision++; clearTimeout(timer); editor.value = source; selectedJob = undefined; severity = 'all'; exampleMode = demo; fileStatus('');
   document.querySelector('#filename')!.textContent = name; update();
 }
@@ -540,7 +555,10 @@ async function openFile(file?: File) {
 
 editor.addEventListener('input', () => { sourceRevision++; fileStatus(''); exampleMode = false; clearTimeout(timer); document.querySelector('#parse-status')!.textContent = 'Updating…'; document.querySelectorAll<HTMLButtonElement>('#export-md, #copy-report, #export-mermaid').forEach(button => { button.disabled = true; }); timer = setTimeout(update, 250); });
 editor.addEventListener('scroll', () => { document.querySelector('#line-numbers')!.scrollTop = editor.scrollTop; });
-select.onchange = () => setSource(examples[select.value as keyof typeof examples], `${select.value}.yml`, true);
+select.onchange = () => {
+  if (select.value === 'compare') loadComparisonExample();
+  else setSource(examples[select.value as keyof typeof examples], `${select.value}.yml`, true);
+};
 document.querySelector<HTMLButtonElement>('#open')!.onclick = () => fileInput.click();
 fileInput.onchange = () => { void openFile(fileInput.files?.[0]); fileInput.value = ''; };
 document.querySelector<HTMLButtonElement>('#clear')!.onclick = () => { setSource('', 'untitled.yml', false); editor.focus(); };
@@ -565,14 +583,14 @@ const baselineInput = document.querySelector<HTMLInputElement>('#baseline-file')
 const baselineStatus = document.querySelector<HTMLElement>('#baseline-status')!;
 document.querySelector<HTMLButtonElement>('#baseline-open')!.onclick = () => baselineInput.click();
 document.querySelector<HTMLButtonElement>('#baseline-current')!.onclick = () => {
-  baselineRevision++; baselineLoading = false; clearTimeout(timer);
+  baselineRevision++; baselineLoading = false; exampleBaseline = false; clearTimeout(timer);
   baselineSource = editor.value;
   baselineName = document.querySelector('#filename')!.textContent || 'current workflow';
   baselineStatus.textContent = `Baseline: ${baselineName}. Edit or open the proposed workflow below.`;
   update();
 };
 document.querySelector<HTMLButtonElement>('#baseline-clear')!.onclick = () => {
-  baselineRevision++; baselineLoading = false; baselineSource = undefined; baselineName = '';
+  baselineRevision++; baselineLoading = false; exampleBaseline = false; baselineSource = undefined; baselineName = '';
   baselineStatus.textContent = 'Baseline removed. Showing a single-workflow review.';
   clearTimeout(timer); update();
   document.querySelector<HTMLButtonElement>('#baseline-current')!.focus();
@@ -592,7 +610,7 @@ baselineInput.onchange = () => {
   clearTimeout(timer); update();
   void file.text().then(source => {
     if (revision !== baselineRevision) return;
-    baselineLoading = false; baselineSource = source; baselineName = file.name;
+    baselineLoading = false; exampleBaseline = false; baselineSource = source; baselineName = file.name;
     baselineStatus.textContent = `Baseline: ${baselineName}. Edit or open the proposed workflow below.`;
     clearTimeout(timer); update();
   }).catch(() => {
@@ -623,4 +641,5 @@ settings.addEventListener('keydown', event => {
 document.addEventListener('click', event => {
   if (event.target instanceof Node && !settings.contains(event.target)) settings.open = false;
 });
-setSource(examples.risky, 'community-pr.yml', true);
+if (new URLSearchParams(location.search).get('example') === 'compare') loadComparisonExample();
+else setSource(examples.risky, 'community-pr.yml', true);

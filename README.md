@@ -24,6 +24,8 @@ Paste or open a workflow to see its job dependencies, requested token permission
 
 ## Try a review in one minute
 
+New here? [Try the synthetic before/after example](https://sreyasts.github.io/workflow-lens/?example=compare): identify which job gained requested write scopes, then decide whether to try your own workflow. The example is not an external review or a security benchmark. Opening your own proposed file clears the example baseline; a baseline you explicitly open or capture is retained.
+
 1. [Open the app](https://sreyasts.github.io/workflow-lens/) and explore the bundled PR trust-boundary example. No installation required.
 2. Select a job to inspect requested permissions and secret references. Follow a hint's line link back to the YAML.
 3. Open your own `.yml` file, then choose **Copy PR report**. Review the metadata before pasting into a GitHub PR or issue; GitHub renders the embedded Mermaid diagram.

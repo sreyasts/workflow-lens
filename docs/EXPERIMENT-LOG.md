@@ -30,6 +30,16 @@ The [awesome-actions listing submission](https://github.com/sdras/awesome-action
 
 The official npm API now reports 175 download events for 19 September–18 October. The sole GitHub star is the maintainer's own. These are distribution observations, not verified independent adoption; no new participant sessions or integrations are established. Sources, the archived response, and limitations are in the [evidence ledger](ADOPTION.md#evidence-ledger).
 
-## Session records
+## Recruitment readiness — 21 October 2026
+
+Discussion #5 had no comments and the repository had no review reports at this check. A focused search of the maintainer's primary mailbox found the three earlier invitations but no matching replies; this checks those sources only and does not prove that nobody has tried the app.
+
+GitHub Traffic API returned 20 repository views / 3 unique clients and 471 clones / 138 unique clients for its rolling window. These are clients, not identified people, and can include the maintainer, CI and bots. They establish no completed independent review or repeat use. Pages visits and demo interactions remain unmeasured; no analytics were added.
+
+A direct synthetic comparison exercise and a shorter review-experience prompt now reduce the first-trial burden. Demo trials, real reviews, prompted returns and voluntary returns must remain separate. The feedback template requests explicit optional consent for one later follow-up, separately from permission to quote. No new invitations, public launch posts or follow-ups were sent during preparation.
+
+The current plan starts with one community-approved public launch, observes actual reports, and changes the approach before repeating promotion. Channel permissions and researched projects do not establish interest or adoption. Private candidate research and contact records stay outside this repository.
+
+### Participant session records
 
 No sessions recorded. For each consenting participant, use an anonymous ID (M01–M05), record only the review date, whether a real sanitized workflow review was completed, the observed outcome or confusion, and whether the participant later returned without prompting. Do not store names, private workflow files, or secret values in this log.

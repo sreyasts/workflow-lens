@@ -63,3 +63,9 @@ jobs:
     secrets: inherit
 `
 };
+
+// A synthetic change-review exercise, not evidence of an external review.
+export const comparisonExample = {
+  before: examples.minimal,
+  after: examples.minimal.replace('    permissions: {}', '    permissions:\n      contents: write\n      id-token: write'),
+};

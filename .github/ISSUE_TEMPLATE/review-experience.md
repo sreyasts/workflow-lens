@@ -8,18 +8,17 @@ assignees: ''
 
 This is a public report. Do not include private workflow contents, credentials, internal URLs, or customer information. A workflow attachment is not required.
 
-## What did you use it for?
+## What did you try?
 
 - [ ] Bundled demo only
 - [ ] First review of a real workflow
+- [ ] Compared two versions of a real workflow
 - [ ] Returned for a different workflow review
 - [ ] Integrated the CLI or Action in a repository
 
-## What were you trying to understand?
+## What helped, confused you, or was wrong?
 
-## What did it help you understand, or get wrong?
-
-Include an example of the outcome. Negative feedback is useful.
+One sentence is enough. "It added nothing to my normal review" is useful feedback too. An example helps, but no workflow attachment is needed.
 
 ## How would you normally do this review?
 
@@ -29,8 +28,18 @@ A public PR or integration link, if you have permission to share it. You can lea
 
 ## Browser / CLI / Action and version
 
+## Where did you find it? (optional)
+
+A community or post name is enough; no personal contact details.
+
+## Follow-up (optional)
+
+- [ ] You may reply once to this issue in about a week to ask whether I used it on another review.
+
+No follow-up is requested unless checked. An answer to a reminder is recorded as prompted use, separately from a voluntary return.
+
 ## Permission to quote (optional)
 
 - [ ] You may quote this feedback in project documentation with attribution to my GitHub username.
 
-Leaving this unchecked means no testimonial permission. Filing this report does not establish independent adoption or consent to follow-up messages.
+Leaving quote permission unchecked means no testimonial permission. A demo trial does not establish a real review or repeat use.
