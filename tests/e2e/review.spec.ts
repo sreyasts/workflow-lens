@@ -107,7 +107,7 @@ for (const width of [390, 1280]) {
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await page.locator('#editor').focus();
     await page.locator('#editor').press('Shift+Tab');
-    await expect(page.getByRole('button', { name: 'Clear', exact: true })).toBeFocused();
+    await expect(page.getByRole('button', { name: 'Open baseline .yml', exact: true })).toBeFocused();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(requests.filter(url => /^https?:/.test(url) && !url.startsWith('http://127.0.0.1:4175/'))).toEqual([]);
     expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(['workflow-lens-theme']);

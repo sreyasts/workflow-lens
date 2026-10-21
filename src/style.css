@@ -1545,6 +1545,23 @@ footer a:hover {
   }
 }
 
+.comparison-panel {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--bg-subtle);
+}
+.comparison-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.comparison-tools h2 { margin: 0 8px 0 0; font-size: 14px; }
+.comparison-panel p { margin: 10px 0; color: var(--fg-muted); font-size: 12px; overflow-wrap: anywhere; }
+.comparison-panel h3 { font-size: 13px; }
+.comparison-panel summary { cursor: pointer; font-weight: 600; }
+.comparison-table { overflow-x: auto; max-height: 340px; margin: 10px 0; }
+.comparison-table table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; }
+.comparison-table th, .comparison-table td { padding: 8px; text-align: left; vertical-align: top; border: 1px solid var(--border-default); overflow-wrap: anywhere; }
+.comparison-table caption { text-align: left; padding-bottom: 8px; color: var(--fg-muted); }
+.comparison-limit { font-style: italic; }
+#baseline-clear[hidden] { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto !important;
